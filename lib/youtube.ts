@@ -14,6 +14,51 @@ export interface YouTubeVideo {
     videoUrl: string;
 }
 
+// Cache duration in milliseconds (15 minutes)
+const CACHE_DURATION = 15 * 60 * 1000;
+
+// Helper function to get cached data
+function getCachedData(key: string): YouTubeVideo[] | null {
+    if (typeof window === 'undefined') return null;
+
+    try {
+        const cached = localStorage.getItem(key);
+        if (!cached) return null;
+
+        const { data, timestamp } = JSON.parse(cached);
+        const now = Date.now();
+
+        // Check if cache is still valid
+        if (now - timestamp < CACHE_DURATION) {
+            console.log(`Using cached YouTube data for: ${key}`);
+            return data;
+        }
+
+        // Cache expired, remove it
+        localStorage.removeItem(key);
+        return null;
+    } catch (error) {
+        console.error('Error reading YouTube cache:', error);
+        return null;
+    }
+}
+
+// Helper function to set cached data
+function setCachedData(key: string, data: YouTubeVideo[]): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+        const cacheData = {
+            data,
+            timestamp: Date.now()
+        };
+        localStorage.setItem(key, JSON.stringify(cacheData));
+        console.log(`Cached YouTube data for: ${key}`);
+    } catch (error) {
+        console.error('Error setting YouTube cache:', error);
+    }
+}
+
 // Convert ISO 8601 duration to readable format (e.g., "PT15M30S" -> "15:30")
 function formatDuration(isoDuration: string): string {
     const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
@@ -55,6 +100,15 @@ export async function fetchYouTubeVideos(
     maxResults: number = 10,
     category?: string
 ): Promise<YouTubeVideo[]> {
+    // Create cache key based on query and category
+    const cacheKey = `youtube_${query}_${category || 'all'}`;
+
+    // Try to get cached data first
+    const cachedData = getCachedData(cacheKey);
+    if (cachedData) {
+        return cachedData;
+    }
+
     try {
         // Adjust query based on category
         let searchQuery = query;
@@ -65,6 +119,7 @@ export async function fetchYouTubeVideos(
         // Step 1: Search for videos
         const searchUrl = `${YOUTUBE_API_BASE}/search?part=snippet&q=${encodeURIComponent(searchQuery)}&type=video&maxResults=${maxResults}&order=date&relevanceLanguage=en&regionCode=PK&key=${YOUTUBE_API_KEY}`;
 
+        console.log(`Fetching fresh YouTube data for: ${cacheKey}`);
         const searchResponse = await fetch(searchUrl);
         if (!searchResponse.ok) {
             throw new Error(`YouTube API error: ${searchResponse.status}`);
@@ -109,6 +164,8 @@ export async function fetchYouTubeVideos(
             };
         });
 
+        // Cache the results
+        setCachedData(cacheKey, videos);
         return videos;
     } catch (error) {
         console.error('Error fetching YouTube videos:', error);
