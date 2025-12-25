@@ -651,7 +651,7 @@ const Modal = ({ isOpen, onClose, children, title }: { isOpen: boolean; onClose:
       <div className="relative w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl max-h-[90vh] flex flex-col animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-300">
         {title && (
           <div className="flex items-center justify-between p-4 border-b border-gray-100 shrink-0">
-            <h3 className="font-bold text-lg">{title}</h3>
+            <h3 className="font-bold text-lg text-black">{title}</h3>
             <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
               <X size={20} />
             </button>
@@ -926,7 +926,7 @@ const FeedCard = ({ data, onComment, onBet, onBookmark }: { data: any; onComment
             {data.bookmarked ? <BookmarkCheck size={20} className="text-black fill-current" /> : <Bookmark size={20} className="text-gray-300" />}
           </button>
         </div>
-        <h3 className="font-bold text-base sm:text-lg mb-2 leading-snug">{data.headline}</h3>
+        <h3 className="font-bold text-base sm:text-lg mb-2 leading-snug text-black">{data.headline}</h3>
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">{data.summary}</p>
 
         {/* Video Player for video type */}
@@ -1472,16 +1472,16 @@ const LessonView = ({ lesson, onBack, onComplete }: { lesson: any; onBack: () =>
                         onClick={() => handleQuizAnswer(qIndex, oIndex)}
                         disabled={quizSubmitted}
                         className={`w-full p-3 rounded-lg border-2 text-left transition-all ${showResult && isCorrect ? 'border-green-500 bg-green-50' :
-                            showResult && isSelected && !isCorrect ? 'border-red-500 bg-red-50' :
-                              isSelected ? 'border-indigo-500 bg-indigo-50' :
-                                'border-gray-200 hover:border-gray-300'
+                          showResult && isSelected && !isCorrect ? 'border-red-500 bg-red-50' :
+                            isSelected ? 'border-indigo-500 bg-indigo-50' :
+                              'border-gray-200 hover:border-gray-300'
                           }`}
                       >
                         <div className="flex items-center gap-2">
                           <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs ${showResult && isCorrect ? 'border-green-500 bg-green-500 text-white' :
-                              showResult && isSelected && !isCorrect ? 'border-red-500 bg-red-500 text-white' :
-                                isSelected ? 'border-indigo-500 bg-indigo-500 text-white' :
-                                  'border-gray-300'
+                            showResult && isSelected && !isCorrect ? 'border-red-500 bg-red-500 text-white' :
+                              isSelected ? 'border-indigo-500 bg-indigo-500 text-white' :
+                                'border-gray-300'
                             }`}>
                             {showResult && isCorrect ? '✓' : showResult && isSelected && !isCorrect ? '✗' : String.fromCharCode(65 + oIndex)}
                           </div>
@@ -1702,7 +1702,7 @@ const DiscussionView = ({ topic, onBack, showToast }: { topic: any; onBack: () =
 
       <div className="bg-gradient-to-r from-blue-500 to-cyan-600 p-4 text-white">
         <span className="text-xs bg-white/20 px-2 py-1 rounded-full font-semibold">{topic.category}</span>
-        <h3 className="text-lg font-bold mt-2">{topic.title}</h3>
+        <h3 className="text-lg font-bold mt-2 text-black">{topic.title}</h3>
         <div className="flex items-center gap-4 mt-2 text-sm opacity-80">
           <span><Users size={14} className="inline mr-1" />{topic.participants} joined</span>
           <span><MessageSquare size={14} className="inline mr-1" />{topic.comments} comments</span>
@@ -1784,14 +1784,14 @@ const LearnHub = ({ onSelectLesson, onSelectChallenge, onSelectDebate, onSelectD
             <div className="bg-gradient-to-r from-amber-400 to-orange-500 rounded-2xl p-4 text-white relative overflow-hidden">
               <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-2"><Flame size={16} /><span className="text-xs font-bold uppercase">Today's Lesson</span></div>
-                <h3 className="text-xl font-bold mb-2">The Headline Trap 🎣</h3>
+                <h3 className="text-xl font-bold mb-2 text-black">The Headline Trap 🎣</h3>
                 <p className="text-sm opacity-90 mb-3">Why headlines don't always tell the full story</p>
                 <button onClick={() => onSelectLesson(LESSONS[2])} className="bg-white text-orange-600 px-4 py-2 rounded-lg font-bold text-sm flex items-center gap-2 hover:bg-orange-50 transition-colors">
                   <PlayCircle size={16} />Start Lesson
                 </button>
               </div>
             </div>
-            <h3 className="font-bold text-lg">All Lessons</h3>
+            <h3 className="font-bold text-lg text-black">All Lessons</h3>
             {LESSONS.map(lesson => (
               <button key={lesson.id} onClick={() => !lesson.locked && onSelectLesson(lesson)} disabled={lesson.locked}
                 className={`w-full bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center gap-4 text-left ${lesson.locked ? 'opacity-50' : 'hover:shadow-md'} transition-all`}>
@@ -1820,13 +1820,13 @@ const LearnHub = ({ onSelectLesson, onSelectChallenge, onSelectDebate, onSelectD
               <div className="flex items-center gap-2 mb-2"><Shield size={20} /><span className="font-bold">Fact Check Challenge</span></div>
               <p className="text-sm opacity-90">Can you spot the fake news? Test your skills!</p>
             </div>
-            <h3 className="font-bold text-lg">Today's Headlines</h3>
+            <h3 className="font-bold text-lg text-black">Today's Headlines</h3>
             {FACT_CHECKS.map((c, i) => (
               <button key={c.id} onClick={() => onSelectChallenge(c)} className="w-full bg-white rounded-xl p-4 border border-gray-100 shadow-sm text-left hover:shadow-md transition-all">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-sm font-bold text-gray-500 shrink-0">{i + 1}</div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold mb-1 leading-snug">"{c.headline}"</h4>
+                    <h4 className="font-semibold mb-1 leading-snug text-black">"{c.headline}"</h4>
                     <p className="text-xs text-gray-400">Source: {c.source}</p>
                   </div>
                 </div>
@@ -1845,7 +1845,7 @@ const LearnHub = ({ onSelectLesson, onSelectChallenge, onSelectDebate, onSelectD
             {DEBATES.map(d => (
               <button key={d.id} onClick={() => onSelectDebate(d)} className="w-full bg-white rounded-xl p-4 border border-gray-100 shadow-sm text-left hover:shadow-md transition-all">
                 <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full font-semibold">{d.category}</span>
-                <h4 className="font-bold mt-2">{d.question}</h4>
+                <h4 className="font-bold mt-2 text-black">{d.question}</h4>
                 <div className="flex gap-4 mt-3">
                   <div className="flex-1 bg-emerald-50 rounded-lg p-2 text-center">
                     <div className="text-xs text-emerald-600 font-semibold">FOR</div>
@@ -2180,7 +2180,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 bg-gradient-to-br from-black to-gray-800 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg">S</div>
             <div>
-              <h1 className="text-lg font-black tracking-tight leading-none">SACH</h1>
+              <h1 className="text-lg font-black tracking-tight leading-none text-black">SACH</h1>
               <span className="text-[9px] font-bold text-gray-400 tracking-widest uppercase">Truth Exchange</span>
             </div>
           </div>
@@ -2204,13 +2204,11 @@ export default function App() {
               <div className="flex gap-2 px-4 py-3 overflow-x-auto border-b border-gray-100 bg-white sticky top-0 z-30 scrollbar-hide">
                 {CATEGORIES.map(c => {
                   const Icon = c.icon;
-                  const count = c.id === 'all' ? feedData.length : feedData.filter((f: { category: string; }) => f.category === c.id).length;
                   return (
                     <button key={c.id} onClick={() => setCat(c.id)}
                       className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${cat === c.id ? `bg-gradient-to-r ${c.color} text-white shadow-lg scale-105` : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                         }`}>
                       <Icon size={14} />{c.label}
-                      {c.id !== 'all' && <span className="opacity-70">({count})</span>}
                     </button>
                   );
                 })}
@@ -2468,7 +2466,7 @@ export default function App() {
                             <div className="text-3xl">{lesson.emoji}</div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1">
-                                <h3 className="font-bold truncate">{lesson.title}</h3>
+                                <h3 className="font-bold truncate text-black">{lesson.title}</h3>
                                 {isCompleted && <CheckCircle2 size={16} className="text-purple-500 shrink-0" />}
                               </div>
                               <p className="text-xs text-gray-500 mb-2">{lesson.topic}</p>
