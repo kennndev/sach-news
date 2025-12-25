@@ -1628,7 +1628,7 @@ export default function App() {
   }, [cat, feedData, mode, youtubeVideos, newsArticles, weatherData]);
 
   const handleBookmark = (id: number) => {
-    setFeedData((prev: any[]) => prev.map((item: { id: number; bookmarked: any; }) => item.id === id ? { ...item, bookmarked: !item.bookmarked } : item));
+    setFeedData((prev: FeedItem[]) => prev.map((item: FeedItem) => item.id === id ? { ...item, bookmarked: !item.bookmarked } : item));
     showToast('Bookmark updated!');
   };
 
