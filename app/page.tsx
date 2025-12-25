@@ -11,8 +11,11 @@ import {
   RotateCcw, Delete, ChevronLeft, HelpCircle, Shuffle,
   GraduationCap, BookOpen, Users, MessageCircle, Shield, Eye,
   ThumbsDown, Scale, Lightbulb, Star, Lock, Volume2, VolumeX,
-  PlayCircle, CheckCircle, XCircle, ChevronDown, Mic, Plus, Minus, Copy
+  PlayCircle, CheckCircle, XCircle, ChevronDown, Mic, Plus, Minus, Copy, Loader2
 } from 'lucide-react';
+import { fetchYouTubeVideos, getCategoryQuery, type YouTubeVideo } from '@/lib/youtube';
+import { fetchNewsArticles, getNewsCategoryQuery, type NewsArticle } from '@/lib/newsapi';
+import { fetchWeatherData, generateWeatherMarket, type WeatherData } from '@/lib/weather';
 
 // ==================== UTILITY FUNCTIONS ====================
 const formatNumber = (n: number) => {
@@ -89,183 +92,40 @@ const generateComments = (count = 3) => {
   });
 };
 
-// ==================== FEED DATA ====================
-const FEED_DATA = [
-  // POLITICS
-  {
-    id: 1, type: 'text', category: 'politics',
-    author: { name: "Capital Talk", verified: true, score: 92, avatar: "CT" },
-    timestamp: "1h ago",
-    headline: "Govt considering 4-day work week to curb energy crisis?",
-    summary: "Energy ministry sources hint at a trial run in federal departments starting Feb 1st. Aim is to save 15% on electricity costs nationwide.",
-    ai_score: 75,
-    market: { question: "Will Govt announce 4-day work week by Feb?", vol: "4.2M", yes: 0.35, no: 0.65, end: "Jan 31", totalPool: 4200000 },
-    comments: generateComments(4), bookmarked: false,
-    engagement: { likes: 1240, comments: 89, shares: 234 }
-  },
-  {
-    id: 2, type: 'text', category: 'politics',
-    author: { name: "Geo News", verified: true, score: 88, avatar: "GN" },
-    timestamp: "3h ago",
-    headline: "Opposition announces nationwide protest campaign",
-    summary: "Major political parties unite against recent economic policies. Protests planned in all provincial capitals starting next week.",
-    ai_score: 95,
-    market: { question: "Will protests exceed 100,000 participants?", vol: "8.5M", yes: 0.62, no: 0.38, end: "Feb 15", totalPool: 8500000 },
-    comments: generateComments(5), bookmarked: true,
-    engagement: { likes: 3420, comments: 456, shares: 890 }
-  },
-  {
-    id: 3, type: 'text', category: 'politics',
-    author: { name: "Dawn News", verified: true, score: 96, avatar: "DN" },
-    timestamp: "5h ago",
-    headline: "Election Commission announces new voter registration drive",
-    summary: "18 million new voters expected to register before general elections. Digital registration process to launch next month.",
-    ai_score: 98,
-    market: { question: "Will 15M+ new voters register by elections?", vol: "12M", yes: 0.72, no: 0.28, end: "Mar 30", totalPool: 12000000 },
-    comments: generateComments(3), bookmarked: false,
-    engagement: { likes: 2100, comments: 234, shares: 567 }
-  },
-
-  // CRICKET
-  {
-    id: 4, type: 'text', category: 'cricket',
-    author: { name: "CricInfo PK", verified: true, score: 98, avatar: "CI" },
-    timestamp: "10m ago",
-    headline: "Shaheen Afridi fit for PSL Opener?",
-    summary: "Medical reports suggest his knee rehab is complete. Lahore Qalandars management confident he will lead the first match against Multan Sultans.",
-    ai_score: 99,
-    market: { question: "Will Shaheen play PSL Opener?", vol: "1.5M", yes: 0.90, no: 0.10, end: "2 days", totalPool: 1500000 },
-    comments: generateComments(6), bookmarked: false,
-    engagement: { likes: 5400, comments: 678, shares: 1200 }
-  },
-  {
-    id: 5, type: 'text', category: 'cricket',
-    author: { name: "PCB Official", verified: true, score: 100, avatar: "PCB" },
-    timestamp: "2h ago",
-    headline: "Babar Azam to experiment with batting position in PSL",
-    summary: "Captain hints at dropping down the order to accommodate aggressive openers. Could open at #3 for Peshawar Zalmi this season.",
-    ai_score: 92,
-    market: { question: "Will Babar bat at #3 in PSL opener?", vol: "2.1M", yes: 0.45, no: 0.55, end: "3 days", totalPool: 2100000 },
-    comments: generateComments(4), bookmarked: false,
-    engagement: { likes: 8900, comments: 1234, shares: 2100 }
-  },
-  {
-    id: 6, type: 'text', category: 'cricket',
-    author: { name: "ESPNcricinfo", verified: true, score: 97, avatar: "EC" },
-    timestamp: "4h ago",
-    headline: "Naseem Shah clocks 155 kph in practice session",
-    summary: "Young pacer in terrific form ahead of PSL. Quetta Gladiators banking on his express pace to dominate the tournament.",
-    ai_score: 88,
-    market: { question: "Will Naseem take 20+ wickets in PSL?", vol: "950K", yes: 0.58, no: 0.42, end: "Apr 1", totalPool: 950000 },
-    comments: generateComments(3), bookmarked: true,
-    engagement: { likes: 4200, comments: 345, shares: 678 }
-  },
-
-  // ECONOMY
-  {
-    id: 7, type: 'text', category: 'economy',
-    author: { name: "Forex Association", verified: true, score: 94, avatar: "FA" },
-    timestamp: "30m ago",
-    headline: "Dollar Rate Stabilizing or Calm before Storm?",
-    summary: "Interbank rate holds at 280. Open market showing pressure due to import backlog clearing. SBP expected to intervene this week.",
-    ai_score: 88,
-    market: { question: "Will USD/PKR cross 285 this week?", vol: "12M", yes: 0.60, no: 0.40, end: "Fri 5PM", totalPool: 12000000 },
-    comments: generateComments(5), bookmarked: false,
-    engagement: { likes: 2100, comments: 167, shares: 345 }
-  },
-  {
-    id: 8, type: 'text', category: 'economy',
-    author: { name: "Business Recorder", verified: true, score: 91, avatar: "BR" },
-    timestamp: "1h ago",
-    headline: "KSE-100 breaks 70,000 barrier for first time",
-    summary: "Historic milestone as foreign investors return. Banking and energy sectors lead the rally. Analysts predict 80K by year end.",
-    ai_score: 95,
-    market: { question: "Will KSE-100 reach 80,000 by Dec?", vol: "5.5M", yes: 0.48, no: 0.52, end: "Dec 31", totalPool: 5500000 },
-    comments: generateComments(4), bookmarked: false,
-    engagement: { likes: 3400, comments: 289, shares: 567 }
-  },
-  {
-    id: 9, type: 'text', category: 'economy',
-    author: { name: "IMF Watch", verified: true, score: 89, avatar: "IMF" },
-    timestamp: "6h ago",
-    headline: "IMF review mission arrives next week",
-    summary: "Critical review to determine next tranche release. Focus on tax collection targets and energy sector reforms.",
-    ai_score: 93,
-    market: { question: "Will Pakistan pass IMF review?", vol: "25M", yes: 0.75, no: 0.25, end: "Feb 28", totalPool: 25000000 },
-    comments: generateComments(6), bookmarked: true,
-    engagement: { likes: 5600, comments: 890, shares: 1234 }
-  },
-
-  // TECH
-  {
-    id: 10, type: 'text', category: 'tech',
-    author: { name: "ProPakistani", verified: true, score: 96, avatar: "PP" },
-    timestamp: "45m ago",
-    headline: "PTA to unblock X (Twitter) finally?",
-    summary: "High court hearings conclude with favorable remarks. PTA directed to submit timeline for restoration within 7 days.",
-    ai_score: 90,
-    market: { question: "Will X be unblocked by next Monday?", vol: "800K", yes: 0.25, no: 0.75, end: "Mon 9AM", totalPool: 800000 },
-    comments: generateComments(7), bookmarked: true,
-    engagement: { likes: 12000, comments: 2345, shares: 4567 }
-  },
-  {
-    id: 11, type: 'text', category: 'tech',
-    author: { name: "TechJuice", verified: true, score: 87, avatar: "TJ" },
-    timestamp: "2h ago",
-    headline: "Pakistan's first AI unicorn in the making?",
-    summary: "Lahore-based startup raises $50M Series B. Valued at $800M, targeting billion-dollar status by 2025.",
-    ai_score: 78,
-    market: { question: "Will PK have AI unicorn by 2025?", vol: "1.2M", yes: 0.42, no: 0.58, end: "Dec 31", totalPool: 1200000 },
-    comments: generateComments(3), bookmarked: false,
-    engagement: { likes: 4500, comments: 234, shares: 567 }
-  },
-  {
-    id: 12, type: 'text', category: 'tech',
-    author: { name: "Digital Pakistan", verified: true, score: 85, avatar: "DP" },
-    timestamp: "5h ago",
-    headline: "5G trials to begin in major cities",
-    summary: "Jazz and Zong receive trial licenses. Limited rollout expected in Islamabad, Lahore, and Karachi by Q2 2025.",
-    ai_score: 82,
-    market: { question: "Will 5G launch commercially in 2025?", vol: "2.8M", yes: 0.55, no: 0.45, end: "Dec 31", totalPool: 2800000 },
-    comments: generateComments(4), bookmarked: false,
-    engagement: { likes: 3200, comments: 456, shares: 789 }
-  },
-
-  // WEATHER
-  {
-    id: 13, type: 'text', category: 'weather',
-    author: { name: "PMD Official", verified: true, score: 95, avatar: "PMD" },
-    timestamp: "15m ago",
-    headline: "Heavy snowfall predicted for northern areas",
-    summary: "Murree, Nathia Gali, and Galiyat to receive 2-3 feet of snow. Tourists advised to check road conditions before traveling.",
-    ai_score: 97,
-    market: { question: "Will Murree receive 2+ feet snow?", vol: "450K", yes: 0.82, no: 0.18, end: "Tomorrow", totalPool: 450000 },
-    comments: generateComments(3), bookmarked: false,
-    engagement: { likes: 2800, comments: 345, shares: 890 }
-  },
-  {
-    id: 14, type: 'text', category: 'weather',
-    author: { name: "Lahore Air Quality", verified: true, score: 93, avatar: "LAQ" },
-    timestamp: "Now",
-    headline: "Smog levels critical in Punjab",
-    summary: "AQI touches 450 in Lahore. Schools closed for 3 days. Artificial rain being considered as emergency measure.",
-    ai_score: 99,
-    market: { question: "Will AQI drop below 200 this week?", vol: "320K", yes: 0.15, no: 0.85, end: "Sun 11PM", totalPool: 320000 },
-    comments: generateComments(5), bookmarked: false,
-    engagement: { likes: 5600, comments: 890, shares: 1500 }
-  },
-  {
-    id: 15, type: 'text', category: 'weather',
-    author: { name: "Weather Updates PK", verified: true, score: 88, avatar: "WU" },
-    timestamp: "3h ago",
-    headline: "Karachi to experience coldest week in decade",
-    summary: "Temperature expected to drop to 8°C. Citizens advised to prepare for unusual cold spell lasting until next week.",
-    ai_score: 85,
-    market: { question: "Will Karachi temp drop below 10°C?", vol: "180K", yes: 0.68, no: 0.32, end: "3 days", totalPool: 180000 },
-    comments: generateComments(2), bookmarked: false,
-    engagement: { likes: 1900, comments: 234, shares: 456 }
-  },
-];
+// ==================== TYPES ====================
+interface FeedItem {
+  id: number;
+  type: 'text' | 'video';
+  category: string;
+  author: {
+    name: string;
+    verified: boolean;
+    score: number;
+    avatar: string;
+  };
+  timestamp: string;
+  headline: string;
+  summary: string;
+  videoUrl?: string;
+  duration?: string;
+  ai_score: number;
+  market: {
+    question: string;
+    vol: string;
+    yes: number;
+    no: number;
+    end: string;
+    totalPool: number;
+  };
+  comments: any[];
+  bookmarked: boolean;
+  engagement: {
+    likes: number;
+    comments: number;
+    shares: number;
+    views?: number;
+  };
+}
 
 // ==================== GAMES DATA ====================
 const WORDLE_WORDS = ['SACH', 'JANG', 'AMAN', 'HAWA', 'PANI', 'NAYA', 'GHAR', 'DOST', 'RAAT', 'SUBH'];
@@ -588,6 +448,7 @@ const FeedCard = ({ data, onComment, onBet, onBookmark }: { data: any; onComment
   const cat = CATEGORIES.find(c => c.id === data.category);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(data.engagement.likes);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const handleLike = () => {
     setLiked(!liked);
@@ -621,6 +482,39 @@ const FeedCard = ({ data, onComment, onBet, onBookmark }: { data: any; onComment
         </div>
         <h3 className="font-bold text-base sm:text-lg mb-2 leading-snug">{data.headline}</h3>
         <p className="text-gray-600 text-sm mb-3 line-clamp-2">{data.summary}</p>
+
+        {/* Video Player for video type */}
+        {data.type === 'video' && (
+          <div className="relative mb-3 rounded-xl overflow-hidden bg-black aspect-video">
+            {!isPlaying ? (
+              <div className="absolute inset-0 flex items-center justify-center cursor-pointer group" onClick={() => setIsPlaying(true)}>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="relative z-10 w-16 h-16 bg-white/90 rounded-full flex items-center justify-center group-hover:bg-white group-hover:scale-110 transition-all">
+                  <Play size={28} className="text-black ml-1" />
+                </div>
+                <div className="absolute bottom-3 left-3 flex items-center gap-2 text-white">
+                  <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded text-xs font-semibold">
+                    <Clock size={12} />{data.duration}
+                  </div>
+                  {data.engagement.views && (
+                    <div className="flex items-center gap-1 bg-black/50 px-2 py-1 rounded text-xs font-semibold">
+                      <Eye size={12} />{formatNumber(data.engagement.views)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <iframe
+                className="w-full h-full"
+                src={`${data.videoUrl}?autoplay=1`}
+                title={data.headline}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            )}
+          </div>
+        )}
+
         <MarketTicker market={data.market} onBet={onBet} />
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
           <div className="flex gap-1">
@@ -1508,8 +1402,14 @@ export default function App() {
   const [tab, setTab] = useState('feed');
   const [mode, setMode] = useState('read');
   const [cat, setCat] = useState('all');
-  const [feedData, setFeedData] = useState(FEED_DATA);
+  const [feedData, setFeedData] = useState<FeedItem[]>([]);
   const [toast, setToast] = useState<string | null>(null);
+  const [youtubeVideos, setYoutubeVideos] = useState<any[]>([]);
+  const [newsArticles, setNewsArticles] = useState<any[]>([]);
+  const [weatherData, setWeatherData] = useState<any[]>([]);
+  const [loadingVideos, setLoadingVideos] = useState(false);
+  const [loadingArticles, setLoadingArticles] = useState(false);
+  const [loadingWeather, setLoadingWeather] = useState(false);
 
   // Modals
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -1523,18 +1423,212 @@ export default function App() {
   const [activeDebate, setActiveDebate] = useState<any>(null);
   const [activeDiscussion, setActiveDiscussion] = useState<any>(null);
 
+  // Fetch YouTube videos
+  useEffect(() => {
+    const loadYouTubeVideos = async () => {
+      setLoadingVideos(true);
+      try {
+        const query = cat === 'all' ? 'Pakistan news' : getCategoryQuery(cat);
+        const videos = await fetchYouTubeVideos(query, 20, cat);
+
+        // Convert YouTube videos to feed format
+        const videoFeedItems = videos.map((video: YouTubeVideo, index: number) => ({
+          id: 1000 + index,
+          type: 'video',
+          category: cat === 'all' ? 'politics' : cat, // Default to politics if 'all'
+          author: {
+            name: video.channelTitle,
+            verified: true,
+            score: 90 + Math.floor(Math.random() * 10),
+            avatar: video.channelTitle.substring(0, 2).toUpperCase()
+          },
+          timestamp: getTimeAgo(video.publishedAt),
+          headline: video.title,
+          summary: video.description.substring(0, 150) + '...',
+          videoUrl: video.videoUrl,
+          duration: video.duration,
+          ai_score: 85 + Math.floor(Math.random() * 15),
+          market: generateMockMarket(video.title),
+          comments: generateComments(Math.floor(Math.random() * 10) + 3),
+          bookmarked: false,
+          engagement: {
+            likes: Math.floor(Math.random() * 10000) + 1000,
+            comments: Math.floor(Math.random() * 500) + 50,
+            shares: Math.floor(Math.random() * 1000) + 100,
+            views: parseInt(video.viewCount)
+          }
+        }));
+
+        setYoutubeVideos(videoFeedItems);
+      } catch (error) {
+        console.error('Error loading YouTube videos:', error);
+        showToast('Failed to load videos');
+      } finally {
+        setLoadingVideos(false);
+      }
+    };
+
+    // Only fetch when in watch mode
+    if (mode === 'watch') {
+      loadYouTubeVideos();
+    }
+  }, [cat, mode]);
+
+  // Fetch News articles
+  useEffect(() => {
+    const loadNewsArticles = async () => {
+      setLoadingArticles(true);
+      try {
+        const query = cat === 'all' ? 'Pakistan' : getNewsCategoryQuery(cat);
+        const articles = await fetchNewsArticles(query, 10, cat);
+
+        // Convert news articles to feed format
+        const articleFeedItems = articles.map((article: NewsArticle, index: number) => ({
+          id: 2000 + index,
+          type: 'text',
+          category: cat === 'all' ? article.category : cat,
+          author: {
+            name: article.source,
+            verified: true,
+            score: 85 + Math.floor(Math.random() * 15),
+            avatar: article.source.substring(0, 2).toUpperCase()
+          },
+          timestamp: getTimeAgo(article.publishedAt),
+          headline: article.title,
+          summary: article.description,
+          ai_score: 80 + Math.floor(Math.random() * 20),
+          market: generateMockMarket(article.title),
+          comments: generateComments(Math.floor(Math.random() * 8) + 2),
+          bookmarked: false,
+          engagement: {
+            likes: Math.floor(Math.random() * 5000) + 500,
+            comments: Math.floor(Math.random() * 300) + 30,
+            shares: Math.floor(Math.random() * 500) + 50
+          }
+        }));
+
+        setNewsArticles(articleFeedItems);
+      } catch (error) {
+        console.error('Error loading news articles:', error);
+        showToast('Failed to load articles');
+      } finally {
+        setLoadingArticles(false);
+      }
+    };
+
+    // Only fetch when in read mode
+    if (mode === 'read') {
+      loadNewsArticles();
+    }
+  }, [cat, mode]);
+
+  // Fetch Weather data
+  useEffect(() => {
+    const loadWeatherData = async () => {
+      setLoadingWeather(true);
+      try {
+        const weather = await fetchWeatherData();
+
+        // Convert weather data to feed format
+        const weatherFeedItems = weather.map((w: WeatherData, index: number) => ({
+          id: 3000 + index,
+          type: 'text',
+          category: 'weather',
+          author: {
+            name: 'Pakistan Meteorological Department',
+            verified: true,
+            score: 98,
+            avatar: 'PMD'
+          },
+          timestamp: 'Now',
+          headline: `${w.emoji} ${w.city}: ${w.temperature}°C - ${w.description}`,
+          summary: `Current temperature: ${w.temperature}°C (feels like ${w.feelsLike}°C). ${w.condition} with ${w.humidity}% humidity and ${w.windSpeed} km/h winds.`,
+          ai_score: 99,
+          market: generateWeatherMarket(w),
+          comments: generateComments(Math.floor(Math.random() * 5) + 2),
+          bookmarked: false,
+          engagement: {
+            likes: Math.floor(Math.random() * 2000) + 300,
+            comments: Math.floor(Math.random() * 150) + 20,
+            shares: Math.floor(Math.random() * 300) + 50
+          }
+        }));
+
+        setWeatherData(weatherFeedItems);
+      } catch (error) {
+        console.error('Error loading weather data:', error);
+        showToast('Failed to load weather data');
+      } finally {
+        setLoadingWeather(false);
+      }
+    };
+
+    // Only fetch when weather category is selected
+    if (cat === 'weather' && mode === 'read') {
+      loadWeatherData();
+    }
+  }, [cat, mode]);
+
+  // Helper function to generate mock prediction market
+  const generateMockMarket = (title: string) => {
+    const yesProb = 0.3 + Math.random() * 0.4;
+    return {
+      question: `Will this story develop further?`,
+      vol: `${(Math.random() * 10 + 1).toFixed(1)}M`,
+      yes: yesProb,
+      no: 1 - yesProb,
+      end: ['2 days', '3 days', '1 week', 'Jan 31'][Math.floor(Math.random() * 4)],
+      totalPool: Math.floor(Math.random() * 10000000) + 1000000
+    };
+  };
+
+  // Helper function to format time ago
+  const getTimeAgo = (isoDate: string): string => {
+    const date = new Date(isoDate);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
+  };
+
   const showToast = useCallback((msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
   }, []);
 
   const filteredFeed = useMemo(() => {
-    if (cat === 'all') return feedData;
-    return feedData.filter(item => item.category === cat);
-  }, [cat, feedData]);
+    let filtered = feedData;
+
+    // Special handling for weather category - show weather data
+    if (cat === 'weather' && mode === 'read') {
+      return weatherData.length > 0 ? weatherData : filtered.filter((item: { category: string; type: string; }) => item.category === 'weather' && item.type === 'text');
+    }
+
+    // Filter by mode (read/watch)
+    if (mode === 'read') {
+      // Use NewsAPI articles when in read mode
+      filtered = newsArticles.length > 0 ? newsArticles : filtered.filter((item: { type: string; }) => item.type === 'text');
+    } else if (mode === 'watch') {
+      // Use YouTube videos when in watch mode
+      filtered = youtubeVideos.length > 0 ? youtubeVideos : filtered.filter((item: { type: string; }) => item.type === 'video');
+    }
+
+    // Filter by category (only for fallback data, APIs handle category filtering)
+    if (cat !== 'all' && ((mode === 'read' && newsArticles.length === 0) || (mode === 'watch' && youtubeVideos.length === 0))) {
+      filtered = filtered.filter((item: { category: string; }) => item.category === cat);
+    }
+
+    return filtered;
+  }, [cat, feedData, mode, youtubeVideos, newsArticles, weatherData]);
 
   const handleBookmark = (id: number) => {
-    setFeedData(prev => prev.map(item => item.id === id ? { ...item, bookmarked: !item.bookmarked } : item));
+    setFeedData((prev: any[]) => prev.map((item: { id: number; bookmarked: any; }) => item.id === id ? { ...item, bookmarked: !item.bookmarked } : item));
     showToast('Bookmark updated!');
   };
 
@@ -1601,7 +1695,7 @@ export default function App() {
               <div className="flex gap-2 px-4 py-3 overflow-x-auto border-b border-gray-100 bg-white sticky top-0 z-30 scrollbar-hide">
                 {CATEGORIES.map(c => {
                   const Icon = c.icon;
-                  const count = c.id === 'all' ? feedData.length : feedData.filter(f => f.category === c.id).length;
+                  const count = c.id === 'all' ? feedData.length : feedData.filter((f: { category: string; }) => f.category === c.id).length;
                   return (
                     <button key={c.id} onClick={() => setCat(c.id)}
                       className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all ${cat === c.id ? `bg-gradient-to-r ${c.color} text-white shadow-lg scale-105` : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
@@ -1613,33 +1707,49 @@ export default function App() {
                 })}
               </div>
               <div className="h-full overflow-y-auto pb-24">
-                <div className="m-4 p-4 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-2xl text-white shadow-xl relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-3"><Flame size={16} /><span className="text-xs font-bold uppercase opacity-80">Trending</span></div>
-                    <h2 className="text-lg sm:text-xl font-bold leading-tight mb-4">Will Pakistan secure IMF tranche by March?</h2>
-                    <div className="flex gap-3">
-                      <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
-                        <div className="text-2xl sm:text-3xl font-black">72%</div>
-                        <div className="text-[10px] uppercase font-bold opacity-70">Yes</div>
-                      </div>
-                      <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
-                        <div className="text-2xl sm:text-3xl font-black">28%</div>
-                        <div className="text-[10px] uppercase font-bold opacity-70">No</div>
+                {(mode === 'read' && (loadingArticles || (cat === 'weather' && loadingWeather))) || (mode === 'watch' && loadingVideos) ? (
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <Loader2 size={48} className="text-violet-600 animate-spin mb-4" />
+                    <p className="text-gray-600 font-semibold">
+                      {cat === 'weather' && mode === 'read' ? 'Loading weather data...' :
+                        mode === 'read' ? 'Loading article...' : 'Loading videos from YouTube...'}
+                    </p>
+                    <p className="text-gray-400 text-sm mt-2">
+                      {cat === 'weather' && mode === 'read' ? 'Fetching latest weather for Pakistani cities' :
+                        mode === 'read' ? 'Fetching latest Pakistan news' : 'Fetching latest Pakistan videos'}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="m-4 p-4 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-2xl text-white shadow-xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-2 mb-3"><Flame size={16} /><span className="text-xs font-bold uppercase opacity-80">Trending</span></div>
+                        <h2 className="text-lg sm:text-xl font-bold leading-tight mb-4">Will Pakistan secure IMF tranche by March?</h2>
+                        <div className="flex gap-3">
+                          <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
+                            <div className="text-2xl sm:text-3xl font-black">72%</div>
+                            <div className="text-[10px] uppercase font-bold opacity-70">Yes</div>
+                          </div>
+                          <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
+                            <div className="text-2xl sm:text-3xl font-black">28%</div>
+                            <div className="text-[10px] uppercase font-bold opacity-70">No</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-                {filteredFeed.map(item => (
-                  <FeedCard key={item.id} data={item}
-                    onComment={() => { setSelectedItem(item); setCommentsOpen(true); }}
-                    onBet={() => { setSelectedItem(item); setBetOpen(true); }}
-                    onBookmark={() => handleBookmark(item.id)} />
-                ))}
-                <div className="p-8 text-center text-gray-400 text-sm">
-                  <CheckCircle2 size={32} className="mx-auto mb-2 opacity-30" />
-                  You're all caught up!
-                </div>
+                    {filteredFeed.map((item: FeedItem) => (
+                      <FeedCard key={item.id} data={item}
+                        onComment={() => { setSelectedItem(item); setCommentsOpen(true); }}
+                        onBet={() => { setSelectedItem(item); setBetOpen(true); }}
+                        onBookmark={() => handleBookmark(item.id)} />
+                    ))}
+                    <div className="p-8 text-center text-gray-400 text-sm">
+                      <CheckCircle2 size={32} className="mx-auto mb-2 opacity-30" />
+                      You're all caught up!
+                    </div>
+                  </>
+                )}
               </div>
             </>
           )}
