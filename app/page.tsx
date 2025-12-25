@@ -11,7 +11,7 @@ import {
   RotateCcw, Delete, ChevronLeft, HelpCircle, Shuffle,
   GraduationCap, BookOpen, Users, MessageCircle, Shield, Eye,
   ThumbsDown, Scale, Lightbulb, Star, Lock, Volume2, VolumeX,
-  PlayCircle, CheckCircle, XCircle, ChevronDown, Mic, Plus, Minus, Copy, Loader2
+  PlayCircle, CheckCircle, XCircle, ChevronDown, Mic, Plus, Minus, Copy, Loader2, ArrowLeft, Check
 } from 'lucide-react';
 import { fetchYouTubeVideos, getCategoryQuery, type YouTubeVideo } from '@/lib/youtube';
 import { fetchNewsArticles, getNewsCategoryQuery, type NewsArticle } from '@/lib/newsapi';
@@ -147,12 +147,458 @@ const NUMBER_PUZZLES = [
 ];
 
 // ==================== LEARNING DATA ====================
-const LESSONS = [
-  { id: 1, title: "Is this news or opinion?", topic: "Media Literacy", duration: "15 min", difficulty: "Beginner", emoji: "📰", xp: 50, completed: true },
-  { id: 2, title: "Spotting Deepfakes", topic: "Digital Literacy", duration: "20 min", difficulty: "Intermediate", emoji: "🤖", xp: 75, completed: true },
-  { id: 3, title: "The Headline Trap", topic: "Critical Reading", duration: "12 min", difficulty: "Beginner", emoji: "🎣", xp: 50, completed: false, isToday: true },
-  { id: 4, title: "Following the Money", topic: "Source Analysis", duration: "25 min", difficulty: "Advanced", emoji: "💰", xp: 100, completed: false, locked: true },
-  { id: 5, title: "Echo Chambers", topic: "Social Media", duration: "18 min", difficulty: "Intermediate", emoji: "🔄", xp: 75, completed: false, locked: true },
+interface Lesson {
+  locked: any;
+  completed: any;
+  difficulty: string;
+  id: number;
+  title: string;
+  topic: string;
+  stage: 'beginner' | 'intermediate' | 'advanced';
+  duration: string;
+  emoji: string;
+  xp: number;
+  description: string;
+  content: string[];
+  quiz: {
+    question: string;
+    options: string[];
+    correctAnswer: number;
+    explanation: string;
+  }[];
+}
+
+const LESSONS: Lesson[] = [
+  // STAGE 1: BEGINNER - Fundamentals
+  {
+    id: 1,
+    title: "Understanding News Sources",
+    topic: "Media Literacy Basics",
+    stage: "beginner",
+    duration: "10 min",
+    emoji: "📰",
+    xp: 50,
+    description: "Learn to identify credible news sources and understand different types of media outlets.",
+    content: [
+      "Not all news sources are created equal. Understanding the difference between primary sources, established media, and opinion blogs is crucial.",
+      "Primary sources: Official statements, government announcements, research papers",
+      "Established media: Dawn, BBC, Reuters - have editorial standards and fact-checking",
+      "Opinion blogs: Personal views, may lack fact-checking",
+      "Always check: Who owns the outlet? What's their track record? Do they cite sources?"
+    ],
+    quiz: [
+      {
+        question: "Which is considered a primary source?",
+        options: ["A blog post about a speech", "The official transcript of a speech", "A tweet commenting on a speech", "A news article about a speech"],
+        correctAnswer: 1,
+        explanation: "Primary sources are original materials - the actual speech transcript is the direct source."
+      },
+      {
+        question: "What should you check about a news outlet?",
+        options: ["Only the headline", "Their social media followers", "Their ownership and track record", "The website design"],
+        correctAnswer: 2,
+        explanation: "Understanding who owns and runs a news outlet helps assess potential biases and credibility."
+      }
+    ],
+    locked: undefined,
+    completed: undefined,
+    difficulty: ''
+  },
+  {
+    id: 2,
+    title: "Identifying Bias in Headlines",
+    topic: "Critical Reading",
+    stage: "beginner",
+    duration: "12 min",
+    emoji: "🎯",
+    xp: 50,
+    description: "Recognize how headlines can manipulate perception through word choice and framing.",
+    content: [
+      "Headlines are designed to grab attention, but they can also mislead through careful word choice.",
+      "Loaded language: 'Slams', 'Destroys', 'Shocking' - emotional words that bias the reader",
+      "Passive voice: 'Mistakes were made' vs 'The minister made mistakes' - hides responsibility",
+      "Question headlines: 'Is the economy failing?' - plants doubt without evidence",
+      "Always read beyond the headline to get the full context and facts."
+    ],
+    quiz: [
+      {
+        question: "Which headline shows the most bias?",
+        options: ["Minister announces new policy", "Minister's SHOCKING policy DESTROYS opposition", "New policy announced by minister", "Policy announcement made today"],
+        correctAnswer: 1,
+        explanation: "Emotional, loaded language like 'SHOCKING' and 'DESTROYS' shows clear bias."
+      },
+      {
+        question: "Why are question headlines problematic?",
+        options: ["They're too short", "They plant doubt without providing evidence", "They're grammatically incorrect", "They're too long"],
+        correctAnswer: 1,
+        explanation: "Question headlines suggest controversy or problems without actually proving anything."
+      }
+    ],
+    locked: undefined,
+    completed: undefined,
+    difficulty: ''
+  },
+  {
+    id: 3,
+    title: "Fact vs Opinion",
+    topic: "Critical Thinking",
+    stage: "beginner",
+    duration: "15 min",
+    emoji: "⚖️",
+    xp: 50,
+    description: "Learn to distinguish between factual reporting and opinion pieces.",
+    content: [
+      "Facts can be verified. Opinions are personal views. News should separate the two clearly.",
+      "Facts: 'The temperature was 35°C', 'The bill passed with 150 votes'",
+      "Opinions: 'The weather was unbearable', 'The bill is a disaster'",
+      "Watch for: 'I think', 'I believe', 'should', 'must' - these signal opinions",
+      "Good journalism labels opinion pieces clearly. Be wary of opinions disguised as news."
+    ],
+    quiz: [
+      {
+        question: "Which statement is a fact?",
+        options: ["The new law is terrible", "The new law passed yesterday", "The new law will ruin everything", "The new law should be repealed"],
+        correctAnswer: 1,
+        explanation: "This can be verified - you can check if the law actually passed yesterday."
+      },
+      {
+        question: "Which word signals an opinion?",
+        options: ["Announced", "Stated", "Should", "Reported"],
+        correctAnswer: 2,
+        explanation: "'Should' expresses what someone thinks ought to happen - it's an opinion word."
+      }
+    ],
+    locked: undefined,
+    completed: undefined,
+    difficulty: ''
+  },
+  {
+    id: 4,
+    title: "Verifying Information",
+    topic: "Fact-Checking",
+    stage: "beginner",
+    duration: "18 min",
+    emoji: "✅",
+    xp: 75,
+    description: "Master the basics of fact-checking and source verification.",
+    content: [
+      "Before sharing news, verify it! Here's how:",
+      "1. Check multiple sources: Does more than one credible outlet report this?",
+      "2. Look for original sources: Can you find the actual study, statement, or document?",
+      "3. Check the date: Is this old news being recycled?",
+      "4. Reverse image search: Is the photo really from this event?",
+      "5. Use fact-checking sites: AFP Fact Check, Snopes, FactCheck.org"
+    ],
+    quiz: [
+      {
+        question: "What's the first step in verifying news?",
+        options: ["Share it immediately", "Check if other credible sources report it", "Trust the headline", "Check social media comments"],
+        correctAnswer: 1,
+        explanation: "Cross-referencing with multiple credible sources is the first step in verification."
+      },
+      {
+        question: "Why should you check the date of an article?",
+        options: ["To see if it's recent news or old news being recycled", "Dates don't matter", "Only for historical articles", "To check the author's age"],
+        correctAnswer: 0,
+        explanation: "Old news is often shared as if it's current, misleading readers about timing."
+      }
+    ],
+    locked: undefined,
+    completed: undefined,
+    difficulty: ''
+  },
+
+  // STAGE 2: INTERMEDIATE - Analysis
+  {
+    id: 5,
+    title: "Detecting Misinformation",
+    topic: "Advanced Fact-Checking",
+    stage: "intermediate",
+    duration: "20 min",
+    emoji: "🔍",
+    xp: 75,
+    description: "Learn advanced techniques to spot false information and manipulation.",
+    content: [
+      "Misinformation spreads faster than truth. Learn to spot it:",
+      "Red flags: Sensational claims, no named sources, emotional manipulation, 'Share before deleted!'",
+      "Check the URL: Fake sites often mimic real ones (e.g., 'abcnews.com.co' vs 'abcnews.com')",
+      "Look for 'About Us': Legitimate sites have clear information about who runs them",
+      "Beware of confirmation bias: Don't just believe things that match your existing views",
+      "If it sounds too outrageous, it probably is - verify before believing or sharing"
+    ],
+    quiz: [
+      {
+        question: "What's a major red flag for misinformation?",
+        options: ["Multiple sources cited", "Sensational claims with no named sources", "Author's name provided", "Publication date shown"],
+        correctAnswer: 1,
+        explanation: "Sensational claims without attribution are classic misinformation tactics."
+      },
+      {
+        question: "What is confirmation bias?",
+        options: ["Checking facts twice", "Believing things that match your existing views", "Confirming with multiple sources", "Bias against confirmation"],
+        correctAnswer: 1,
+        explanation: "Confirmation bias makes us accept information that aligns with our beliefs without scrutiny."
+      }
+    ],
+    locked: undefined,
+    completed: undefined,
+    difficulty: ''
+  },
+  {
+    id: 6,
+    title: "Understanding Context",
+    topic: "Media Analysis",
+    stage: "intermediate",
+    duration: "22 min",
+    emoji: "🧩",
+    xp: 75,
+    description: "Learn why context matters and how missing context changes meaning.",
+    content: [
+      "Context is everything. A quote, statistic, or image without context can be completely misleading.",
+      "Out-of-context quotes: 'I never said...' - check the full statement",
+      "Cherry-picked statistics: '90% increase!' - from what baseline? Over what time?",
+      "Cropped images: What's outside the frame? What happened before/after?",
+      "Historical context: What was happening at the time? What led to this?",
+      "Always ask: What's the full story? What am I not being told?"
+    ],
+    quiz: [
+      {
+        question: "Why is context important for statistics?",
+        options: ["It makes numbers look bigger", "It shows the baseline and timeframe", "Statistics don't need context", "Context is only for quotes"],
+        correctAnswer: 1,
+        explanation: "Without knowing the starting point and timeframe, statistics can be meaningless or misleading."
+      },
+      {
+        question: "What should you ask about a cropped image?",
+        options: ["Who took it?", "What's outside the frame?", "What camera was used?", "What filter was applied?"],
+        correctAnswer: 1,
+        explanation: "Cropped images can hide important context - always wonder what's been cut out."
+      }
+    ],
+    locked: undefined,
+    completed: undefined,
+    difficulty: ''
+  },
+  {
+    id: 7,
+    title: "Analyzing Sources",
+    topic: "Source Evaluation",
+    stage: "intermediate",
+    duration: "25 min",
+    emoji: "📊",
+    xp: 100,
+    description: "Deep dive into evaluating source credibility and identifying conflicts of interest.",
+    content: [
+      "Not all sources are equally reliable. Learn to evaluate them:",
+      "Expertise: Is the source qualified to speak on this topic?",
+      "Conflicts of interest: Does the source benefit from this narrative?",
+      "Track record: Have they been accurate in the past?",
+      "Transparency: Do they disclose their methods and funding?",
+      "Anonymous sources: Sometimes necessary, but require extra scrutiny",
+      "Primary vs secondary: Always try to find the original source"
+    ],
+    quiz: [
+      {
+        question: "What's a conflict of interest?",
+        options: ["Two sources disagreeing", "A source benefiting from their narrative", "Interest in conflicts", "Interesting conflicts"],
+        correctAnswer: 1,
+        explanation: "A conflict of interest exists when a source has something to gain from the story they're telling."
+      },
+      {
+        question: "Why check a source's track record?",
+        options: ["To see if they've been accurate before", "To count their articles", "To check their age", "To see their education"],
+        correctAnswer: 0,
+        explanation: "Past accuracy is a good indicator of current reliability."
+      }
+    ],
+    locked: undefined,
+    completed: undefined,
+    difficulty: ''
+  },
+  {
+    id: 8,
+    title: "Cross-Referencing News",
+    topic: "Verification Techniques",
+    stage: "intermediate",
+    duration: "20 min",
+    emoji: "🔗",
+    xp: 75,
+    description: "Master the art of cross-referencing information across multiple sources.",
+    content: [
+      "One source is never enough. Cross-referencing is essential:",
+      "Check 3+ sources: Do they all report the same facts?",
+      "Look for original reporting: Who broke the story? Others might just be copying",
+      "Compare details: Do the facts match across sources?",
+      "Check international sources: Different perspectives can reveal bias",
+      "Beware of circular reporting: Multiple sites citing each other, not original sources",
+      "Use diverse sources: Don't just check outlets you already trust"
+    ],
+    quiz: [
+      {
+        question: "How many sources should you check?",
+        options: ["One is enough", "At least three", "Only two", "As many as possible but at least one"],
+        correctAnswer: 1,
+        explanation: "Checking at least three credible sources helps confirm facts and spot inconsistencies."
+      },
+      {
+        question: "What is circular reporting?",
+        options: ["Reporting in circles", "Multiple sites citing each other, not original sources", "Round-the-clock reporting", "Circular arguments"],
+        correctAnswer: 1,
+        explanation: "Circular reporting creates an illusion of multiple sources when they're all copying each other."
+      }
+    ],
+    locked: undefined,
+    completed: undefined,
+    difficulty: ''
+  },
+
+  // STAGE 3: ADVANCED - Expert Level
+  {
+    id: 9,
+    title: "Media Manipulation Techniques",
+    topic: "Advanced Analysis",
+    stage: "advanced",
+    duration: "30 min",
+    emoji: "🎭",
+    xp: 100,
+    description: "Identify sophisticated manipulation techniques used in modern media.",
+    content: [
+      "Advanced manipulation goes beyond simple lies. Recognize these techniques:",
+      "Astroturfing: Fake grassroots movements created to seem organic",
+      "Whataboutism: Deflecting criticism by pointing to others' flaws",
+      "False equivalence: Treating unequal things as equal ('both sides')",
+      "Gish gallop: Overwhelming with many weak arguments instead of one strong one",
+      "Sealioning: Feigning ignorance to exhaust and frustrate",
+      "These techniques are designed to confuse, not inform"
+    ],
+    quiz: [
+      {
+        question: "What is astroturfing?",
+        options: ["Fake grass", "Fake grassroots movements", "Turf wars", "Grass manipulation"],
+        correctAnswer: 1,
+        explanation: "Astroturfing creates the illusion of organic public support when it's actually manufactured."
+      },
+      {
+        question: "What is whataboutism?",
+        options: ["Asking what about something", "Deflecting criticism by pointing to others", "Being curious", "Asking questions"],
+        correctAnswer: 1,
+        explanation: "Whataboutism avoids addressing criticism by changing the subject to someone else's flaws."
+      }
+    ],
+    locked: undefined,
+    completed: undefined,
+    difficulty: ''
+  },
+  {
+    id: 10,
+    title: "Propaganda Recognition",
+    topic: "Political Communication",
+    stage: "advanced",
+    duration: "28 min",
+    emoji: "📢",
+    xp: 100,
+    description: "Learn to identify propaganda techniques in news and political communication.",
+    content: [
+      "Propaganda uses psychological techniques to influence opinion:",
+      "Bandwagon: 'Everyone believes this, you should too'",
+      "Fear appeal: Creating panic to push an agenda",
+      "Glittering generalities: Vague, positive words without substance",
+      "Name-calling: Attacking the person, not the argument",
+      "Transfer: Associating something with positive/negative symbols",
+      "Testimonial: Using celebrity endorsements instead of evidence",
+      "Card stacking: Presenting only one side of the story"
+    ],
+    quiz: [
+      {
+        question: "What is the bandwagon technique?",
+        options: ["Musical bands", "Suggesting everyone believes something so you should too", "Jumping on wagons", "Band merchandise"],
+        correctAnswer: 1,
+        explanation: "Bandwagon appeals to our desire to fit in by suggesting 'everyone' agrees."
+      },
+      {
+        question: "What is card stacking?",
+        options: ["Stacking playing cards", "Presenting only one side of the story", "Building card houses", "Organizing cards"],
+        correctAnswer: 1,
+        explanation: "Card stacking presents only favorable information while hiding contradictory facts."
+      }
+    ],
+    locked: undefined,
+    completed: undefined,
+    difficulty: ''
+  },
+  {
+    id: 11,
+    title: "Deep Fake Detection",
+    topic: "Digital Literacy",
+    stage: "advanced",
+    duration: "25 min",
+    emoji: "🤖",
+    xp: 100,
+    description: "Learn to spot AI-generated content and deep fake videos.",
+    content: [
+      "AI-generated content is becoming harder to detect. Look for these signs:",
+      "Videos: Unnatural blinking, lip-sync issues, weird lighting, distorted edges",
+      "Images: Inconsistent lighting, strange shadows, warped backgrounds, odd hands/teeth",
+      "Text: Repetitive patterns, factual errors, inconsistent style",
+      "Audio: Robotic cadence, breathing inconsistencies, background noise artifacts",
+      "Tools: Use reverse image search, check metadata, use AI detection tools",
+      "When in doubt, verify with the original source directly"
+    ],
+    quiz: [
+      {
+        question: "What's a sign of a deep fake video?",
+        options: ["High quality", "Unnatural blinking patterns", "Good lighting", "Clear audio"],
+        correctAnswer: 1,
+        explanation: "Deep fakes often struggle with natural blinking and micro-expressions."
+      },
+      {
+        question: "How can you verify a suspicious video?",
+        options: ["Just trust it", "Contact the original source directly", "Share it to ask others", "Ignore it"],
+        correctAnswer: 1,
+        explanation: "Directly contacting the alleged source is the most reliable verification method."
+      }
+    ],
+    locked: undefined,
+    completed: undefined,
+    difficulty: ''
+  },
+  {
+    id: 12,
+    title: "Investigative Journalism",
+    topic: "Professional Standards",
+    stage: "advanced",
+    duration: "35 min",
+    emoji: "🔎",
+    xp: 150,
+    description: "Understand how professional journalists investigate and verify complex stories.",
+    content: [
+      "Investigative journalism requires rigorous methods:",
+      "Multiple sources: Never rely on a single source for important claims",
+      "Documentation: Keep records of everything - emails, documents, recordings",
+      "Follow the money: Financial trails often reveal the truth",
+      "Protection of sources: Journalists must protect confidential sources",
+      "Legal review: Major investigations undergo legal scrutiny before publication",
+      "Public interest: Stories must serve the public, not just generate clicks",
+      "These standards separate real journalism from clickbait"
+    ],
+    quiz: [
+      {
+        question: "Why do journalists protect sources?",
+        options: ["To hide information", "To enable whistleblowers to come forward safely", "To seem mysterious", "To avoid work"],
+        correctAnswer: 1,
+        explanation: "Source protection enables people to expose wrongdoing without fear of retaliation."
+      },
+      {
+        question: "What does 'follow the money' mean?",
+        options: ["Become rich", "Track financial trails to find the truth", "Count money", "Follow wealthy people"],
+        correctAnswer: 1,
+        explanation: "Financial connections often reveal motivations and hidden relationships in a story."
+      }
+    ],
+    locked: undefined,
+    completed: undefined,
+    difficulty: ''
+  }
 ];
 
 const FACT_CHECKS = [
@@ -946,99 +1392,144 @@ const GamesHub = ({ onSelectGame }: { onSelectGame: (game: string) => void }) =>
 
 // Lesson View
 const LessonView = ({ lesson, onBack, onComplete }: { lesson: any; onBack: () => void; onComplete: () => void }) => {
-  const [step, setStep] = useState(0);
-  const [answer, setAnswer] = useState<number | null>(null);
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [currentQuizAnswers, setCurrentQuizAnswers] = useState<number[]>([]);
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
 
-  const content = [
-    { type: 'intro', title: lesson.title, text: 'Headlines are designed to grab attention. But they often oversimplify or sensationalize. Let\'s learn to look beyond.' },
-    { type: 'example', bad: 'Scientists Say Chocolate Cures All Diseases!', good: 'Study finds dark chocolate may have some health benefits', lesson: 'Headlines often exaggerate research findings for clicks.' },
-    { type: 'quiz', q: 'Which headline is likely clickbait?', opts: ['Government announces new policy', 'You Won\'t BELIEVE What This Celebrity Did!!!', 'Weather: Rain expected this weekend'], correct: 1 },
-    { type: 'tips', tips: ['Always read beyond the headline', 'Check the source', 'Look for emotional manipulation', 'Verify with multiple sources'] }
-  ];
+  const content: string[] = lesson.content || [];
+  const quizData = lesson.quiz || [];
 
-  const curr = content[step];
-  const isLast = step === content.length - 1;
+  const handleQuizAnswer = (qIndex: number, aIndex: number) => {
+    if (quizSubmitted) return;
+    const newAnswers = [...currentQuizAnswers];
+    newAnswers[qIndex] = aIndex;
+    setCurrentQuizAnswers(newAnswers);
+  };
+
+  const correctCount = currentQuizAnswers.filter((ans, idx) => ans === quizData[idx]?.correctAnswer).length;
 
   return (
     <div className="flex flex-col h-full bg-white">
       <div className="flex items-center justify-between p-4 border-b border-gray-100">
         <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><ChevronLeft size={24} /></button>
-        <div className="flex-1 mx-4"><div className="h-2 bg-gray-200 rounded-full overflow-hidden"><div className="h-full bg-emerald-500 transition-all duration-300" style={{ width: `${((step + 1) / content.length) * 100}%` }} /></div></div>
-        <span className="text-sm text-gray-500">{step + 1}/{content.length}</span>
+        <h2 className="font-bold truncate flex-1 text-center px-4">{lesson.title}</h2>
+        <div className="w-10" />
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">
-        {curr.type === 'intro' && (
-          <div className="text-center py-8">
-            <div className="text-6xl mb-6">{lesson.emoji}</div>
-            <h2 className="text-2xl font-bold mb-4">{curr.title}</h2>
-            <p className="text-gray-600 leading-relaxed">{curr.text}</p>
-          </div>
-        )}
-        {curr.type === 'example' && (
-          <div className="space-y-4">
-            <h3 className="text-lg font-bold">Spot the Problem</h3>
-            <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
-              <div className="text-xs text-red-600 font-bold mb-2">⚠️ MISLEADING</div>
-              <p className="font-bold text-red-800">"{curr.bad}"</p>
+        {!showQuiz ? (
+          <div className="space-y-6">
+            {/* Lesson Header */}
+            <div className="text-center py-4">
+              <div className="text-6xl mb-4">{lesson.emoji}</div>
+              <h2 className="text-2xl font-bold mb-2">{lesson.title}</h2>
+              <p className="text-sm text-gray-500">{lesson.topic} • {lesson.duration}</p>
+              <p className="text-gray-600 mt-4">{lesson.description}</p>
             </div>
-            <div className="bg-emerald-50 border-2 border-emerald-200 rounded-xl p-4">
-              <div className="text-xs text-emerald-600 font-bold mb-2">✓ BETTER</div>
-              <p className="font-bold text-emerald-800">"{curr.good}"</p>
-            </div>
-            <div className="bg-blue-50 rounded-xl p-4">
-              <div className="flex items-center gap-2 mb-2"><Lightbulb size={18} className="text-blue-600" /><span className="font-bold text-blue-800">Lesson</span></div>
-              <p className="text-blue-700">{curr.lesson}</p>
-            </div>
-          </div>
-        )}
-        {curr.type === 'quiz' && (
-          <div>
-            <h3 className="text-lg font-bold mb-4">Quick Quiz</h3>
-            <p className="text-gray-700 mb-4">{curr.q}</p>
-            <div className="space-y-3">
-              {curr.opts?.map((opt, i) => (
-                <button key={i} onClick={() => setAnswer(i)} className={`w-full p-4 rounded-xl text-left transition-all border-2 ${answer === null ? 'border-gray-200 hover:border-gray-300' :
-                  i === curr.correct ? 'border-emerald-500 bg-emerald-50' :
-                    answer === i ? 'border-red-500 bg-red-50' : 'border-gray-200 opacity-50'
-                  }`}>
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold ${answer !== null && i === curr.correct ? 'bg-emerald-500 text-white' :
-                      answer === i && i !== curr.correct ? 'bg-red-500 text-white' : 'bg-gray-100 text-gray-500'
-                      }`}>{answer !== null && i === curr.correct ? '✓' : String.fromCharCode(65 + i)}</div>
-                    <span className="font-medium">{opt}</span>
-                  </div>
-                </button>
+
+            {/* Content Sections */}
+            <div className="space-y-4">
+              {content.map((paragraph: string, index: number) => (
+                <div key={index} className={`p-4 rounded-xl ${index === 0 ? 'bg-blue-50 border-2 border-blue-200' : 'bg-gray-50'}`}>
+                  <p className={`leading-relaxed ${index === 0 ? 'text-blue-800 font-medium' : 'text-gray-700'}`}>
+                    {paragraph}
+                  </p>
+                </div>
               ))}
             </div>
-            {answer !== null && (
-              <div className={`mt-4 p-4 rounded-xl ${answer === curr.correct ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
-                {answer === curr.correct ? '🎉 Correct! Excessive punctuation and phrases like "You Won\'t Believe" are classic clickbait.' : '💡 The answer is B. Look for sensational language.'}
+
+            {/* Continue to Quiz Button */}
+            <button
+              onClick={() => setShowQuiz(true)}
+              className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <Brain size={20} />
+              Take the Quiz
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Brain size={24} className="text-purple-600" />
+              Knowledge Check
+            </h2>
+
+            {/* Quiz Questions */}
+            {quizData.map((q: any, qIndex: number) => (
+              <div key={qIndex} className="space-y-3 p-4 bg-gray-50 rounded-xl">
+                <p className="font-semibold text-gray-800">
+                  {qIndex + 1}. {q.question}
+                </p>
+                <div className="space-y-2">
+                  {q.options.map((opt: string, oIndex: number) => {
+                    const isSelected = currentQuizAnswers[qIndex] === oIndex;
+                    const isCorrect = oIndex === q.correctAnswer;
+                    const showResult = quizSubmitted;
+
+                    return (
+                      <button
+                        key={oIndex}
+                        onClick={() => handleQuizAnswer(qIndex, oIndex)}
+                        disabled={quizSubmitted}
+                        className={`w-full p-3 rounded-lg border-2 text-left transition-all ${showResult && isCorrect ? 'border-green-500 bg-green-50' :
+                            showResult && isSelected && !isCorrect ? 'border-red-500 bg-red-50' :
+                              isSelected ? 'border-indigo-500 bg-indigo-50' :
+                                'border-gray-200 hover:border-gray-300'
+                          }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs ${showResult && isCorrect ? 'border-green-500 bg-green-500 text-white' :
+                              showResult && isSelected && !isCorrect ? 'border-red-500 bg-red-500 text-white' :
+                                isSelected ? 'border-indigo-500 bg-indigo-500 text-white' :
+                                  'border-gray-300'
+                            }`}>
+                            {showResult && isCorrect ? '✓' : showResult && isSelected && !isCorrect ? '✗' : String.fromCharCode(65 + oIndex)}
+                          </div>
+                          <span className="text-sm">{opt}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {quizSubmitted && (
+                  <div className="mt-2 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+                    <p className="text-sm text-blue-900">
+                      <strong>Explanation:</strong> {q.explanation}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* Submit/Complete Buttons */}
+            {!quizSubmitted ? (
+              <button
+                onClick={() => setQuizSubmitted(true)}
+                disabled={currentQuizAnswers.length !== quizData.length}
+                className="w-full py-4 bg-indigo-600 text-white rounded-xl font-bold disabled:opacity-50 hover:bg-indigo-700 transition-colors"
+              >
+                Submit Answers
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <div className="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+                  <div className="text-3xl mb-2">{correctCount === quizData.length ? '🎉' : '💪'}</div>
+                  <p className="font-bold text-lg">{correctCount}/{quizData.length} Correct</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {correctCount === quizData.length ? 'Perfect!' : 'Review the explanations above.'}
+                  </p>
+                </div>
+                <button
+                  onClick={onComplete}
+                  className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-emerald-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 size={20} />
+                  Complete Lesson (+{lesson.xp} XP)
+                </button>
               </div>
             )}
           </div>
         )}
-        {curr.type === 'tips' && (
-          <div className="text-center py-8">
-            <div className="text-6xl mb-6">🎓</div>
-            <h2 className="text-2xl font-bold mb-6">Key Takeaways</h2>
-            <div className="space-y-3 text-left">
-              {curr.tips?.map((tip, i) => (
-                <div key={i} className="flex items-center gap-3 bg-emerald-50 p-4 rounded-xl">
-                  <CheckCircle className="text-emerald-500 shrink-0" size={20} />
-                  <span className="font-medium text-emerald-800">{tip}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="p-4 border-t border-gray-100 shrink-0">
-        <button onClick={() => isLast ? onComplete() : (setStep(step + 1), setAnswer(null))} disabled={curr.type === 'quiz' && answer === null}
-          className="w-full py-4 bg-emerald-500 text-white rounded-xl font-bold disabled:opacity-50 hover:bg-emerald-600 transition-colors active:scale-[0.98]">
-          {isLast ? '🎉 Complete (+50 XP)' : 'Continue'}
-        </button>
       </div>
     </div>
   );
@@ -1422,6 +1913,24 @@ export default function App() {
   const [activeChallenge, setActiveChallenge] = useState<any>(null);
   const [activeDebate, setActiveDebate] = useState<any>(null);
   const [activeDiscussion, setActiveDiscussion] = useState<any>(null);
+
+  // Learn section state
+  const [completedLessons, setCompletedLessons] = useState<number[]>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('completedLessons');
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+  const [currentQuizAnswers, setCurrentQuizAnswers] = useState<number[]>([]);
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+
+  // Save completed lessons to localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('completedLessons', JSON.stringify(completedLessons));
+    }
+  }, [completedLessons]);
 
   // Fetch YouTube videos
   useEffect(() => {
@@ -1811,6 +2320,321 @@ export default function App() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Learn Section */}
+          {tab === 'learn' && !activeLesson && (
+            <div className="h-full overflow-y-auto pb-24">
+              {/* Header */}
+              <div className="bg-gradient-to-br from-indigo-600 to-purple-700 p-6 pb-8 text-white">
+                <h1 className="text-2xl sm:text-3xl font-black mb-2">📚 Learn</h1>
+                <p className="text-white/80 text-sm">Master media literacy & critical thinking</p>
+
+                {/* Progress Overview */}
+                <div className="mt-6 bg-white/10 backdrop-blur-sm rounded-xl p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-semibold">Overall Progress</span>
+                    <span className="text-sm font-bold">{completedLessons.length}/{LESSONS.length}</span>
+                  </div>
+                  <div className="w-full bg-white/20 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="bg-white h-full rounded-full transition-all duration-500"
+                      style={{ width: `${(completedLessons.length / LESSONS.length) * 100}%` }}
+                    />
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-3 text-center">
+                    <div>
+                      <div className="text-2xl font-black">{completedLessons.filter(id => LESSONS.find(l => l.id === id)?.stage === 'beginner').length}/4</div>
+                      <div className="text-xs opacity-80">Beginner</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-black">{completedLessons.filter(id => LESSONS.find(l => l.id === id)?.stage === 'intermediate').length}/4</div>
+                      <div className="text-xs opacity-80">Intermediate</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-black">{completedLessons.filter(id => LESSONS.find(l => l.id === id)?.stage === 'advanced').length}/4</div>
+                      <div className="text-xs opacity-80">Advanced</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lessons by Stage */}
+              <div className="p-4 space-y-6">
+                {/* Stage 1: Beginner */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <span className="text-sm font-black text-green-600">1</span>
+                    </div>
+                    <div>
+                      <h2 className="font-bold text-lg">Fundamentals</h2>
+                      <p className="text-xs text-gray-500">Start your learning journey</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {LESSONS.filter(l => l.stage === 'beginner').map(lesson => {
+                      const isCompleted = completedLessons.includes(lesson.id);
+                      return (
+                        <button
+                          key={lesson.id}
+                          onClick={() => setActiveLesson(lesson)}
+                          className="w-full bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-green-300 transition-all text-left"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="text-3xl">{lesson.emoji}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold truncate">{lesson.title}</h3>
+                                {isCompleted && <CheckCircle2 size={16} className="text-green-500 shrink-0" />}
+                              </div>
+                              <p className="text-xs text-gray-500 mb-2">{lesson.topic}</p>
+                              <div className="flex items-center gap-3 text-xs text-gray-400">
+                                <span className="flex items-center gap-1"><Clock size={12} />{lesson.duration}</span>
+                                <span className="flex items-center gap-1"><Award size={12} />{lesson.xp} XP</span>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Stage 2: Intermediate */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span className="text-sm font-black text-blue-600">2</span>
+                    </div>
+                    <div>
+                      <h2 className="font-bold text-lg">Analysis</h2>
+                      <p className="text-xs text-gray-500">Develop critical analysis skills</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {LESSONS.filter(l => l.stage === 'intermediate').map(lesson => {
+                      const isCompleted = completedLessons.includes(lesson.id);
+                      return (
+                        <button
+                          key={lesson.id}
+                          onClick={() => setActiveLesson(lesson)}
+                          className="w-full bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-blue-300 transition-all text-left"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="text-3xl">{lesson.emoji}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold truncate">{lesson.title}</h3>
+                                {isCompleted && <CheckCircle2 size={16} className="text-blue-500 shrink-0" />}
+                              </div>
+                              <p className="text-xs text-gray-500 mb-2">{lesson.topic}</p>
+                              <div className="flex items-center gap-3 text-xs text-gray-400">
+                                <span className="flex items-center gap-1"><Clock size={12} />{lesson.duration}</span>
+                                <span className="flex items-center gap-1"><Award size={12} />{lesson.xp} XP</span>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Stage 3: Advanced */}
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center">
+                      <span className="text-sm font-black text-purple-600">3</span>
+                    </div>
+                    <div>
+                      <h2 className="font-bold text-lg">Expert Level</h2>
+                      <p className="text-xs text-gray-500">Master advanced techniques</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {LESSONS.filter(l => l.stage === 'advanced').map(lesson => {
+                      const isCompleted = completedLessons.includes(lesson.id);
+                      return (
+                        <button
+                          key={lesson.id}
+                          onClick={() => setActiveLesson(lesson)}
+                          className="w-full bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-purple-300 transition-all text-left"
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className="text-3xl">{lesson.emoji}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-bold truncate">{lesson.title}</h3>
+                                {isCompleted && <CheckCircle2 size={16} className="text-purple-500 shrink-0" />}
+                              </div>
+                              <p className="text-xs text-gray-500 mb-2">{lesson.topic}</p>
+                              <div className="flex items-center gap-3 text-xs text-gray-400">
+                                <span className="flex items-center gap-1"><Clock size={12} />{lesson.duration}</span>
+                                <span className="flex items-center gap-1"><Award size={12} />{lesson.xp} XP</span>
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Lesson Detail View */}
+          {tab === 'learn' && activeLesson && (
+            <div className="h-full overflow-y-auto pb-24">
+              {/* Header */}
+              <div className={`p-6 pb-8 text-white ${activeLesson.stage === 'beginner' ? 'bg-gradient-to-br from-green-600 to-emerald-700' :
+                activeLesson.stage === 'intermediate' ? 'bg-gradient-to-br from-blue-600 to-indigo-700' :
+                  'bg-gradient-to-br from-purple-600 to-violet-700'
+                }`}>
+                <button
+                  onClick={() => {
+                    setActiveLesson(null);
+                    setCurrentQuizAnswers([]);
+                    setQuizSubmitted(false);
+                  }}
+                  className="mb-4 flex items-center gap-2 text-white/80 hover:text-white transition-colors"
+                >
+                  <ArrowLeft size={20} />
+                  <span className="text-sm font-semibold">Back to Lessons</span>
+                </button>
+                <div className="text-4xl mb-3">{activeLesson.emoji}</div>
+                <h1 className="text-2xl sm:text-3xl font-black mb-2">{activeLesson.title}</h1>
+                <p className="text-white/80 text-sm mb-4">{activeLesson.description}</p>
+                <div className="flex items-center gap-4 text-sm">
+                  <span className="flex items-center gap-1"><Clock size={14} />{activeLesson.duration}</span>
+                  <span className="flex items-center gap-1"><Award size={14} />{activeLesson.xp} XP</span>
+                  <span className="px-2 py-1 bg-white/20 rounded-full text-xs font-semibold capitalize">{activeLesson.stage}</span>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-6">
+                <div className="bg-white rounded-xl p-6 border-2 border-gray-100">
+                  <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <BookOpen size={20} className="text-indigo-600" />
+                    Lesson Content
+                  </h2>
+                  <div className="space-y-4">
+                    {activeLesson.content.map((paragraph: string, index: number) => (
+                      <p key={index} className="text-gray-700 leading-relaxed">
+                        {paragraph}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Quiz */}
+                <div className="bg-white rounded-xl p-6 border-2 border-gray-100">
+                  <h2 className="font-bold text-lg mb-4 flex items-center gap-2">
+                    <Brain size={20} className="text-purple-600" />
+                    Knowledge Check
+                  </h2>
+                  <div className="space-y-6">
+                    {activeLesson.quiz.map((question: any, qIndex: number) => (
+                      <div key={qIndex} className="space-y-3">
+                        <p className="font-semibold text-gray-800">
+                          {qIndex + 1}. {question.question}
+                        </p>
+                        <div className="space-y-2">
+                          {question.options.map((option: string, oIndex: number) => {
+                            const isSelected = currentQuizAnswers[qIndex] === oIndex;
+                            const isCorrect = oIndex === question.correctAnswer;
+                            const showResult = quizSubmitted;
+
+                            return (
+                              <button
+                                key={oIndex}
+                                onClick={() => {
+                                  if (!quizSubmitted) {
+                                    const newAnswers = [...currentQuizAnswers];
+                                    newAnswers[qIndex] = oIndex;
+                                    setCurrentQuizAnswers(newAnswers);
+                                  }
+                                }}
+                                disabled={quizSubmitted}
+                                className={`w-full p-3 rounded-lg border-2 text-left transition-all ${showResult && isCorrect ? 'border-green-500 bg-green-50' :
+                                  showResult && isSelected && !isCorrect ? 'border-red-500 bg-red-50' :
+                                    isSelected ? 'border-indigo-500 bg-indigo-50' :
+                                      'border-gray-200 hover:border-gray-300'
+                                  }`}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${showResult && isCorrect ? 'border-green-500 bg-green-500' :
+                                    showResult && isSelected && !isCorrect ? 'border-red-500 bg-red-500' :
+                                      isSelected ? 'border-indigo-500 bg-indigo-500' :
+                                        'border-gray-300'
+                                    }`}>
+                                    {showResult && isCorrect && <Check size={14} className="text-white" />}
+                                    {showResult && isSelected && !isCorrect && <X size={14} className="text-white" />}
+                                    {isSelected && !showResult && <div className="w-2 h-2 bg-white rounded-full" />}
+                                  </div>
+                                  <span className="text-sm">{option}</span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        {quizSubmitted && (
+                          <div className="mt-2 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+                            <p className="text-sm text-blue-900">
+                              <strong>Explanation:</strong> {question.explanation}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Submit/Complete Button */}
+                  {!quizSubmitted ? (
+                    <button
+                      onClick={() => setQuizSubmitted(true)}
+                      disabled={currentQuizAnswers.length !== activeLesson.quiz.length}
+                      className="w-full mt-6 py-4 bg-indigo-600 text-white rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-indigo-700 transition-colors"
+                    >
+                      Submit Answers
+                    </button>
+                  ) : (
+                    <div className="mt-6 space-y-3">
+                      <div className="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+                        <div className="text-3xl mb-2">
+                          {currentQuizAnswers.filter((ans, idx) => ans === activeLesson.quiz[idx].correctAnswer).length === activeLesson.quiz.length ? '🎉' : '💪'}
+                        </div>
+                        <p className="font-bold text-lg">
+                          {currentQuizAnswers.filter((ans, idx) => ans === activeLesson.quiz[idx].correctAnswer).length}/{activeLesson.quiz.length} Correct
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          {currentQuizAnswers.filter((ans, idx) => ans === activeLesson.quiz[idx].correctAnswer).length === activeLesson.quiz.length
+                            ? 'Perfect score! You\'ve mastered this lesson!'
+                            : 'Good effort! Review the explanations and try again.'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          if (!completedLessons.includes(activeLesson.id)) {
+                            setCompletedLessons([...completedLessons, activeLesson.id]);
+                            showToast(`🎉 Lesson completed! +${activeLesson.xp} XP`);
+                          }
+                          setActiveLesson(null);
+                          setCurrentQuizAnswers([]);
+                          setQuizSubmitted(false);
+                        }}
+                        className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-emerald-700 transition-colors flex items-center justify-center gap-2"
+                      >
+                        <CheckCircle2 size={20} />
+                        Complete Lesson
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
