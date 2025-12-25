@@ -1,5 +1,5 @@
 // NewsData.io API utility functions
-const NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY || 'pub_bd432535fdf14e13adfeb650d53d27be';
+const NEWS_API_KEY = process.env.NEXT_PUBLIC_NEWS_API_KEY || 'pub_f4caccdaf75e4cbaabcc81078087d037';
 const NEWS_API_BASE = 'https://newsdata.io/api/1';
 
 export interface NewsArticle {
@@ -226,3 +226,4 @@ export function getNewsCategoryQuery(category: string): string {
 
     return categoryMap[category] || 'Pakistan news';
 }
+
