@@ -50,9 +50,63 @@ function getWeatherEmoji(condition: string, icon: string): string {
     return '🌤️'; // default
 }
 
+// Cache duration in milliseconds (30 minutes for weather - changes less frequently)
+const CACHE_DURATION = 30 * 60 * 1000;
+
+// Helper function to get cached data
+function getCachedWeatherData(key: string): WeatherData[] | null {
+    if (typeof window === 'undefined') return null;
+
+    try {
+        const cached = localStorage.getItem(key);
+        if (!cached) return null;
+
+        const { data, timestamp } = JSON.parse(cached);
+        const now = Date.now();
+
+        // Check if cache is still valid
+        if (now - timestamp < CACHE_DURATION) {
+            console.log(`Using cached weather data for: ${key}`);
+            return data;
+        }
+
+        // Cache expired, remove it
+        localStorage.removeItem(key);
+        return null;
+    } catch (error) {
+        console.error('Error reading weather cache:', error);
+        return null;
+    }
+}
+
+// Helper function to set cached data
+function setCachedWeatherData(key: string, data: WeatherData[]): void {
+    if (typeof window === 'undefined') return;
+
+    try {
+        const cacheData = {
+            data,
+            timestamp: Date.now()
+        };
+        localStorage.setItem(key, JSON.stringify(cacheData));
+        console.log(`Cached weather data for: ${key}`);
+    } catch (error) {
+        console.error('Error setting weather cache:', error);
+    }
+}
+
 // Fetch current weather for all Pakistani cities
 export async function fetchWeatherData(): Promise<WeatherData[]> {
+    const cacheKey = 'weather_pakistan_cities';
+
+    // Try to get cached data first
+    const cachedData = getCachedWeatherData(cacheKey);
+    if (cachedData) {
+        return cachedData;
+    }
+
     try {
+        console.log(`Fetching fresh weather data for Pakistani cities`);
         const weatherPromises = PAKISTANI_CITIES.map(async (city) => {
             const url = `${WEATHER_API_BASE}/weather?lat=${city.lat}&lon=${city.lon}&units=metric&appid=${WEATHER_API_KEY}`;
 
@@ -79,6 +133,9 @@ export async function fetchWeatherData(): Promise<WeatherData[]> {
         });
 
         const weatherData = await Promise.all(weatherPromises);
+
+        // Cache the results
+        setCachedWeatherData(cacheKey, weatherData);
         return weatherData;
     } catch (error) {
         console.error('Error fetching weather data:', error);
