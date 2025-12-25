@@ -1053,7 +1053,7 @@ const GamesHub = ({ onSelectGame }: { onSelectGame: (game: string) => void }) =>
 // Lesson View
 const LessonView = ({ lesson, onBack, onComplete }: { lesson: any; onBack: () => void; onComplete: () => void }) => {
   const [step, setStep] = useState(0);
-  const [answer, setAnswer] = useState(null);
+  const [answer, setAnswer] = useState<number | null>(null);
 
   const content = [
     { type: 'intro', title: lesson.title, text: 'Headlines are designed to grab attention. But they often oversimplify or sensationalize. Let\'s learn to look beyond.' },
