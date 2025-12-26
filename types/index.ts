@@ -2,3 +2,4 @@
 export * from './feed';
 export * from './learn';
 export * from './crypto';
+export * from './factCheck';
