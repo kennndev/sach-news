@@ -16,24 +16,15 @@ import {
 import { fetchYouTubeVideos, getCategoryQuery, type YouTubeVideo } from '@/lib/youtube';
 import { fetchNewsArticles, getNewsCategoryQuery, type NewsArticle } from '@/lib/newsapi';
 import { fetchWeatherData, generateWeatherMarket, type WeatherData } from '@/lib/weather';
-
-// ==================== UTILITY FUNCTIONS ====================
-const formatNumber = (n: number) => {
-  if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
-  if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
-  return n.toString();
-};
-
-const generateId = () => Math.random().toString(36).substr(2, 9);
-
-// ==================== MOCK USER ====================
-const MOCK_USER = {
-  name: "Bilal Khan", handle: "@bilal_k", avatar: "BK",
-  balance_pkr: 84500, reputation: 89, rank: "Truth Seeker",
-  streak: 24, winRate: 67, totalBets: 156, activeBets: 8,
-  gamesPlayed: 45, gamesWon: 38, lessonsCompleted: 12,
-  criticalThinkingScore: 78, certificates: 3
-};
+import { formatNumber, generateId, generateComments } from '@/lib/utils';
+import { FeedItem, Lesson, CryptoModule } from '@/types';
+import { MOCK_USER } from '@/data/mockUser';
+import { WORDLE_WORDS, CONNECTIONS_PUZZLE, NUMBER_PUZZLES } from '@/data/games';
+import { FACT_CHECKS } from '@/data/factChecks';
+import { DEBATES } from '@/data/debates';
+import { DISCUSSIONS } from '@/data/discussions';
+import { LESSONS } from '@/data/lessons';
+import { CRYPTO_MODULES } from '@/data/cryptoModules';
 
 // ==================== CATEGORIES ====================
 const CATEGORIES = [
@@ -45,592 +36,7 @@ const CATEGORIES = [
   { id: 'weather', label: 'Weather', icon: CloudRain, color: 'from-slate-500 to-gray-600' },
 ];
 
-// ==================== COMMENTS GENERATOR ====================
-const generateComments = (count = 3) => {
-  const users = [
-    { name: 'Ahmed Hassan', avatar: 'AH' },
-    { name: 'Sara Ali', avatar: 'SA' },
-    { name: 'Usman Khan', avatar: 'UK' },
-    { name: 'Fatima Zahra', avatar: 'FZ' },
-    { name: 'Ali Raza', avatar: 'AR' },
-    { name: 'Ayesha Malik', avatar: 'AM' },
-  ];
-  const texts = [
-    'This is huge if true! The market seems to be pricing this correctly.',
-    'I think the odds are way off here. Betting NO.',
-    'Anyone else think this is clickbait?',
-    'Great analysis, but I disagree with the conclusion.',
-    'The AI trust score seems accurate based on my research.',
-    'Need more sources to confirm this.',
-    'This changed my mind. Going with YES now.',
-    'Classic media manipulation. Stay skeptical.',
-  ];
-  const times = ['Just now', '2m ago', '5m ago', '15m ago', '1h ago', '2h ago', '3h ago'];
 
-  return Array(count).fill(null).map((_, i) => {
-    const user = users[i % users.length];
-    const hasReplies = Math.random() > 0.5;
-    return {
-      id: generateId(),
-      author: user.name,
-      avatar: user.avatar,
-      text: texts[Math.floor(Math.random() * texts.length)],
-      timestamp: times[Math.floor(Math.random() * times.length)],
-      likes: Math.floor(Math.random() * 50),
-      liked: false,
-      replies: hasReplies ? [{
-        id: generateId(),
-        author: users[(i + 1) % users.length].name,
-        avatar: users[(i + 1) % users.length].avatar,
-        text: texts[Math.floor(Math.random() * texts.length)],
-        timestamp: times[Math.floor(Math.random() * times.length)],
-        likes: Math.floor(Math.random() * 20),
-        liked: false,
-        replies: []
-      }] : []
-    };
-  });
-};
-
-// ==================== TYPES ====================
-interface FeedItem {
-  id: number;
-  type: 'text' | 'video';
-  category: string;
-  author: {
-    name: string;
-    verified: boolean;
-    score: number;
-    avatar: string;
-  };
-  timestamp: string;
-  headline: string;
-  summary: string;
-  videoUrl?: string;
-  duration?: string;
-  ai_score: number;
-  market: {
-    question: string;
-    vol: string;
-    yes: number;
-    no: number;
-    end: string;
-    totalPool: number;
-  };
-  comments: any[];
-  bookmarked: boolean;
-  engagement: {
-    likes: number;
-    comments: number;
-    shares: number;
-    views?: number;
-  };
-}
-
-// ==================== GAMES DATA ====================
-const WORDLE_WORDS = ['SACH', 'JANG', 'AMAN', 'HAWA', 'PANI', 'NAYA', 'GHAR', 'DOST', 'RAAT', 'SUBH'];
-
-const CONNECTIONS_PUZZLE = {
-  categories: [
-    { name: 'Pakistani Cricketers', color: 'bg-yellow-500', words: ['BABAR', 'SHAHEEN', 'RIZWAN', 'SHADAB'] },
-    { name: 'Pakistani Cities', color: 'bg-green-500', words: ['LAHORE', 'KARACHI', 'MULTAN', 'QUETTA'] },
-    { name: 'Currencies', color: 'bg-blue-500', words: ['RUPEE', 'DOLLAR', 'POUND', 'DIRHAM'] },
-    { name: 'News Channels', color: 'bg-purple-500', words: ['GEO', 'ARY', 'DUNYA', 'SAMAA'] },
-  ]
-};
-
-const NUMBER_PUZZLES = [
-  { target: 150, numbers: [2, 5, 10, 25, 3, 7] },
-  { target: 236, numbers: [4, 6, 8, 15, 25, 2] },
-  { target: 100, numbers: [1, 3, 5, 7, 11, 13] },
-  { target: 75, numbers: [2, 4, 6, 8, 10, 12] },
-];
-
-// ==================== LEARNING DATA ====================
-interface Lesson {
-  locked: any;
-  completed: any;
-  difficulty: string;
-  id: number;
-  title: string;
-  topic: string;
-  stage: 'beginner' | 'intermediate' | 'advanced';
-  duration: string;
-  emoji: string;
-  xp: number;
-  description: string;
-  content: string[];
-  quiz: {
-    question: string;
-    options: string[];
-    correctAnswer: number;
-    explanation: string;
-  }[];
-}
-
-const LESSONS: Lesson[] = [
-  // STAGE 1: BEGINNER - Fundamentals
-  {
-    id: 1,
-    title: "Understanding News Sources",
-    topic: "Media Literacy Basics",
-    stage: "beginner",
-    duration: "10 min",
-    emoji: "📰",
-    xp: 50,
-    description: "Learn to identify credible news sources and understand different types of media outlets.",
-    content: [
-      "Not all news sources are created equal. Understanding the difference between primary sources, established media, and opinion blogs is crucial.",
-      "Primary sources: Official statements, government announcements, research papers",
-      "Established media: Dawn, BBC, Reuters - have editorial standards and fact-checking",
-      "Opinion blogs: Personal views, may lack fact-checking",
-      "Always check: Who owns the outlet? What's their track record? Do they cite sources?"
-    ],
-    quiz: [
-      {
-        question: "Which is considered a primary source?",
-        options: ["A blog post about a speech", "The official transcript of a speech", "A tweet commenting on a speech", "A news article about a speech"],
-        correctAnswer: 1,
-        explanation: "Primary sources are original materials - the actual speech transcript is the direct source."
-      },
-      {
-        question: "What should you check about a news outlet?",
-        options: ["Only the headline", "Their social media followers", "Their ownership and track record", "The website design"],
-        correctAnswer: 2,
-        explanation: "Understanding who owns and runs a news outlet helps assess potential biases and credibility."
-      }
-    ],
-    locked: undefined,
-    completed: undefined,
-    difficulty: ''
-  },
-  {
-    id: 2,
-    title: "Identifying Bias in Headlines",
-    topic: "Critical Reading",
-    stage: "beginner",
-    duration: "12 min",
-    emoji: "🎯",
-    xp: 50,
-    description: "Recognize how headlines can manipulate perception through word choice and framing.",
-    content: [
-      "Headlines are designed to grab attention, but they can also mislead through careful word choice.",
-      "Loaded language: 'Slams', 'Destroys', 'Shocking' - emotional words that bias the reader",
-      "Passive voice: 'Mistakes were made' vs 'The minister made mistakes' - hides responsibility",
-      "Question headlines: 'Is the economy failing?' - plants doubt without evidence",
-      "Always read beyond the headline to get the full context and facts."
-    ],
-    quiz: [
-      {
-        question: "Which headline shows the most bias?",
-        options: ["Minister announces new policy", "Minister's SHOCKING policy DESTROYS opposition", "New policy announced by minister", "Policy announcement made today"],
-        correctAnswer: 1,
-        explanation: "Emotional, loaded language like 'SHOCKING' and 'DESTROYS' shows clear bias."
-      },
-      {
-        question: "Why are question headlines problematic?",
-        options: ["They're too short", "They plant doubt without providing evidence", "They're grammatically incorrect", "They're too long"],
-        correctAnswer: 1,
-        explanation: "Question headlines suggest controversy or problems without actually proving anything."
-      }
-    ],
-    locked: undefined,
-    completed: undefined,
-    difficulty: ''
-  },
-  {
-    id: 3,
-    title: "Fact vs Opinion",
-    topic: "Critical Thinking",
-    stage: "beginner",
-    duration: "15 min",
-    emoji: "⚖️",
-    xp: 50,
-    description: "Learn to distinguish between factual reporting and opinion pieces.",
-    content: [
-      "Facts can be verified. Opinions are personal views. News should separate the two clearly.",
-      "Facts: 'The temperature was 35°C', 'The bill passed with 150 votes'",
-      "Opinions: 'The weather was unbearable', 'The bill is a disaster'",
-      "Watch for: 'I think', 'I believe', 'should', 'must' - these signal opinions",
-      "Good journalism labels opinion pieces clearly. Be wary of opinions disguised as news."
-    ],
-    quiz: [
-      {
-        question: "Which statement is a fact?",
-        options: ["The new law is terrible", "The new law passed yesterday", "The new law will ruin everything", "The new law should be repealed"],
-        correctAnswer: 1,
-        explanation: "This can be verified - you can check if the law actually passed yesterday."
-      },
-      {
-        question: "Which word signals an opinion?",
-        options: ["Announced", "Stated", "Should", "Reported"],
-        correctAnswer: 2,
-        explanation: "'Should' expresses what someone thinks ought to happen - it's an opinion word."
-      }
-    ],
-    locked: undefined,
-    completed: undefined,
-    difficulty: ''
-  },
-  {
-    id: 4,
-    title: "Verifying Information",
-    topic: "Fact-Checking",
-    stage: "beginner",
-    duration: "18 min",
-    emoji: "✅",
-    xp: 75,
-    description: "Master the basics of fact-checking and source verification.",
-    content: [
-      "Before sharing news, verify it! Here's how:",
-      "1. Check multiple sources: Does more than one credible outlet report this?",
-      "2. Look for original sources: Can you find the actual study, statement, or document?",
-      "3. Check the date: Is this old news being recycled?",
-      "4. Reverse image search: Is the photo really from this event?",
-      "5. Use fact-checking sites: AFP Fact Check, Snopes, FactCheck.org"
-    ],
-    quiz: [
-      {
-        question: "What's the first step in verifying news?",
-        options: ["Share it immediately", "Check if other credible sources report it", "Trust the headline", "Check social media comments"],
-        correctAnswer: 1,
-        explanation: "Cross-referencing with multiple credible sources is the first step in verification."
-      },
-      {
-        question: "Why should you check the date of an article?",
-        options: ["To see if it's recent news or old news being recycled", "Dates don't matter", "Only for historical articles", "To check the author's age"],
-        correctAnswer: 0,
-        explanation: "Old news is often shared as if it's current, misleading readers about timing."
-      }
-    ],
-    locked: undefined,
-    completed: undefined,
-    difficulty: ''
-  },
-
-  // STAGE 2: INTERMEDIATE - Analysis
-  {
-    id: 5,
-    title: "Detecting Misinformation",
-    topic: "Advanced Fact-Checking",
-    stage: "intermediate",
-    duration: "20 min",
-    emoji: "🔍",
-    xp: 75,
-    description: "Learn advanced techniques to spot false information and manipulation.",
-    content: [
-      "Misinformation spreads faster than truth. Learn to spot it:",
-      "Red flags: Sensational claims, no named sources, emotional manipulation, 'Share before deleted!'",
-      "Check the URL: Fake sites often mimic real ones (e.g., 'abcnews.com.co' vs 'abcnews.com')",
-      "Look for 'About Us': Legitimate sites have clear information about who runs them",
-      "Beware of confirmation bias: Don't just believe things that match your existing views",
-      "If it sounds too outrageous, it probably is - verify before believing or sharing"
-    ],
-    quiz: [
-      {
-        question: "What's a major red flag for misinformation?",
-        options: ["Multiple sources cited", "Sensational claims with no named sources", "Author's name provided", "Publication date shown"],
-        correctAnswer: 1,
-        explanation: "Sensational claims without attribution are classic misinformation tactics."
-      },
-      {
-        question: "What is confirmation bias?",
-        options: ["Checking facts twice", "Believing things that match your existing views", "Confirming with multiple sources", "Bias against confirmation"],
-        correctAnswer: 1,
-        explanation: "Confirmation bias makes us accept information that aligns with our beliefs without scrutiny."
-      }
-    ],
-    locked: undefined,
-    completed: undefined,
-    difficulty: ''
-  },
-  {
-    id: 6,
-    title: "Understanding Context",
-    topic: "Media Analysis",
-    stage: "intermediate",
-    duration: "22 min",
-    emoji: "🧩",
-    xp: 75,
-    description: "Learn why context matters and how missing context changes meaning.",
-    content: [
-      "Context is everything. A quote, statistic, or image without context can be completely misleading.",
-      "Out-of-context quotes: 'I never said...' - check the full statement",
-      "Cherry-picked statistics: '90% increase!' - from what baseline? Over what time?",
-      "Cropped images: What's outside the frame? What happened before/after?",
-      "Historical context: What was happening at the time? What led to this?",
-      "Always ask: What's the full story? What am I not being told?"
-    ],
-    quiz: [
-      {
-        question: "Why is context important for statistics?",
-        options: ["It makes numbers look bigger", "It shows the baseline and timeframe", "Statistics don't need context", "Context is only for quotes"],
-        correctAnswer: 1,
-        explanation: "Without knowing the starting point and timeframe, statistics can be meaningless or misleading."
-      },
-      {
-        question: "What should you ask about a cropped image?",
-        options: ["Who took it?", "What's outside the frame?", "What camera was used?", "What filter was applied?"],
-        correctAnswer: 1,
-        explanation: "Cropped images can hide important context - always wonder what's been cut out."
-      }
-    ],
-    locked: undefined,
-    completed: undefined,
-    difficulty: ''
-  },
-  {
-    id: 7,
-    title: "Analyzing Sources",
-    topic: "Source Evaluation",
-    stage: "intermediate",
-    duration: "25 min",
-    emoji: "📊",
-    xp: 100,
-    description: "Deep dive into evaluating source credibility and identifying conflicts of interest.",
-    content: [
-      "Not all sources are equally reliable. Learn to evaluate them:",
-      "Expertise: Is the source qualified to speak on this topic?",
-      "Conflicts of interest: Does the source benefit from this narrative?",
-      "Track record: Have they been accurate in the past?",
-      "Transparency: Do they disclose their methods and funding?",
-      "Anonymous sources: Sometimes necessary, but require extra scrutiny",
-      "Primary vs secondary: Always try to find the original source"
-    ],
-    quiz: [
-      {
-        question: "What's a conflict of interest?",
-        options: ["Two sources disagreeing", "A source benefiting from their narrative", "Interest in conflicts", "Interesting conflicts"],
-        correctAnswer: 1,
-        explanation: "A conflict of interest exists when a source has something to gain from the story they're telling."
-      },
-      {
-        question: "Why check a source's track record?",
-        options: ["To see if they've been accurate before", "To count their articles", "To check their age", "To see their education"],
-        correctAnswer: 0,
-        explanation: "Past accuracy is a good indicator of current reliability."
-      }
-    ],
-    locked: undefined,
-    completed: undefined,
-    difficulty: ''
-  },
-  {
-    id: 8,
-    title: "Cross-Referencing News",
-    topic: "Verification Techniques",
-    stage: "intermediate",
-    duration: "20 min",
-    emoji: "🔗",
-    xp: 75,
-    description: "Master the art of cross-referencing information across multiple sources.",
-    content: [
-      "One source is never enough. Cross-referencing is essential:",
-      "Check 3+ sources: Do they all report the same facts?",
-      "Look for original reporting: Who broke the story? Others might just be copying",
-      "Compare details: Do the facts match across sources?",
-      "Check international sources: Different perspectives can reveal bias",
-      "Beware of circular reporting: Multiple sites citing each other, not original sources",
-      "Use diverse sources: Don't just check outlets you already trust"
-    ],
-    quiz: [
-      {
-        question: "How many sources should you check?",
-        options: ["One is enough", "At least three", "Only two", "As many as possible but at least one"],
-        correctAnswer: 1,
-        explanation: "Checking at least three credible sources helps confirm facts and spot inconsistencies."
-      },
-      {
-        question: "What is circular reporting?",
-        options: ["Reporting in circles", "Multiple sites citing each other, not original sources", "Round-the-clock reporting", "Circular arguments"],
-        correctAnswer: 1,
-        explanation: "Circular reporting creates an illusion of multiple sources when they're all copying each other."
-      }
-    ],
-    locked: undefined,
-    completed: undefined,
-    difficulty: ''
-  },
-
-  // STAGE 3: ADVANCED - Expert Level
-  {
-    id: 9,
-    title: "Media Manipulation Techniques",
-    topic: "Advanced Analysis",
-    stage: "advanced",
-    duration: "30 min",
-    emoji: "🎭",
-    xp: 100,
-    description: "Identify sophisticated manipulation techniques used in modern media.",
-    content: [
-      "Advanced manipulation goes beyond simple lies. Recognize these techniques:",
-      "Astroturfing: Fake grassroots movements created to seem organic",
-      "Whataboutism: Deflecting criticism by pointing to others' flaws",
-      "False equivalence: Treating unequal things as equal ('both sides')",
-      "Gish gallop: Overwhelming with many weak arguments instead of one strong one",
-      "Sealioning: Feigning ignorance to exhaust and frustrate",
-      "These techniques are designed to confuse, not inform"
-    ],
-    quiz: [
-      {
-        question: "What is astroturfing?",
-        options: ["Fake grass", "Fake grassroots movements", "Turf wars", "Grass manipulation"],
-        correctAnswer: 1,
-        explanation: "Astroturfing creates the illusion of organic public support when it's actually manufactured."
-      },
-      {
-        question: "What is whataboutism?",
-        options: ["Asking what about something", "Deflecting criticism by pointing to others", "Being curious", "Asking questions"],
-        correctAnswer: 1,
-        explanation: "Whataboutism avoids addressing criticism by changing the subject to someone else's flaws."
-      }
-    ],
-    locked: undefined,
-    completed: undefined,
-    difficulty: ''
-  },
-  {
-    id: 10,
-    title: "Propaganda Recognition",
-    topic: "Political Communication",
-    stage: "advanced",
-    duration: "28 min",
-    emoji: "📢",
-    xp: 100,
-    description: "Learn to identify propaganda techniques in news and political communication.",
-    content: [
-      "Propaganda uses psychological techniques to influence opinion:",
-      "Bandwagon: 'Everyone believes this, you should too'",
-      "Fear appeal: Creating panic to push an agenda",
-      "Glittering generalities: Vague, positive words without substance",
-      "Name-calling: Attacking the person, not the argument",
-      "Transfer: Associating something with positive/negative symbols",
-      "Testimonial: Using celebrity endorsements instead of evidence",
-      "Card stacking: Presenting only one side of the story"
-    ],
-    quiz: [
-      {
-        question: "What is the bandwagon technique?",
-        options: ["Musical bands", "Suggesting everyone believes something so you should too", "Jumping on wagons", "Band merchandise"],
-        correctAnswer: 1,
-        explanation: "Bandwagon appeals to our desire to fit in by suggesting 'everyone' agrees."
-      },
-      {
-        question: "What is card stacking?",
-        options: ["Stacking playing cards", "Presenting only one side of the story", "Building card houses", "Organizing cards"],
-        correctAnswer: 1,
-        explanation: "Card stacking presents only favorable information while hiding contradictory facts."
-      }
-    ],
-    locked: undefined,
-    completed: undefined,
-    difficulty: ''
-  },
-  {
-    id: 11,
-    title: "Deep Fake Detection",
-    topic: "Digital Literacy",
-    stage: "advanced",
-    duration: "25 min",
-    emoji: "🤖",
-    xp: 100,
-    description: "Learn to spot AI-generated content and deep fake videos.",
-    content: [
-      "AI-generated content is becoming harder to detect. Look for these signs:",
-      "Videos: Unnatural blinking, lip-sync issues, weird lighting, distorted edges",
-      "Images: Inconsistent lighting, strange shadows, warped backgrounds, odd hands/teeth",
-      "Text: Repetitive patterns, factual errors, inconsistent style",
-      "Audio: Robotic cadence, breathing inconsistencies, background noise artifacts",
-      "Tools: Use reverse image search, check metadata, use AI detection tools",
-      "When in doubt, verify with the original source directly"
-    ],
-    quiz: [
-      {
-        question: "What's a sign of a deep fake video?",
-        options: ["High quality", "Unnatural blinking patterns", "Good lighting", "Clear audio"],
-        correctAnswer: 1,
-        explanation: "Deep fakes often struggle with natural blinking and micro-expressions."
-      },
-      {
-        question: "How can you verify a suspicious video?",
-        options: ["Just trust it", "Contact the original source directly", "Share it to ask others", "Ignore it"],
-        correctAnswer: 1,
-        explanation: "Directly contacting the alleged source is the most reliable verification method."
-      }
-    ],
-    locked: undefined,
-    completed: undefined,
-    difficulty: ''
-  },
-  {
-    id: 12,
-    title: "Investigative Journalism",
-    topic: "Professional Standards",
-    stage: "advanced",
-    duration: "35 min",
-    emoji: "🔎",
-    xp: 150,
-    description: "Understand how professional journalists investigate and verify complex stories.",
-    content: [
-      "Investigative journalism requires rigorous methods:",
-      "Multiple sources: Never rely on a single source for important claims",
-      "Documentation: Keep records of everything - emails, documents, recordings",
-      "Follow the money: Financial trails often reveal the truth",
-      "Protection of sources: Journalists must protect confidential sources",
-      "Legal review: Major investigations undergo legal scrutiny before publication",
-      "Public interest: Stories must serve the public, not just generate clicks",
-      "These standards separate real journalism from clickbait"
-    ],
-    quiz: [
-      {
-        question: "Why do journalists protect sources?",
-        options: ["To hide information", "To enable whistleblowers to come forward safely", "To seem mysterious", "To avoid work"],
-        correctAnswer: 1,
-        explanation: "Source protection enables people to expose wrongdoing without fear of retaliation."
-      },
-      {
-        question: "What does 'follow the money' mean?",
-        options: ["Become rich", "Track financial trails to find the truth", "Count money", "Follow wealthy people"],
-        correctAnswer: 1,
-        explanation: "Financial connections often reveal motivations and hidden relationships in a story."
-      }
-    ],
-    locked: undefined,
-    completed: undefined,
-    difficulty: ''
-  }
-];
-
-const FACT_CHECKS = [
-  { id: 1, headline: "Scientists discover drinking 8 glasses of water daily is a myth", source: "HealthDaily Blog", isReal: true, explanation: "Multiple studies have shown water needs vary by individual. The 8 glasses rule has no scientific basis.", flags: ["Verified by research", "Multiple sources confirm"] },
-  { id: 2, headline: "Local boy finds Rs. 10 million buried in backyard, keeps it all", source: "ViralNews24", isReal: false, explanation: "Treasure trove laws require reporting to authorities. Source is not credible.", flags: ["Unknown source", "Legally impossible claim"] },
-  { id: 3, headline: "Pakistan cricket team announces squad for upcoming series", source: "PCB Official", isReal: true, explanation: "Official announcement from verified Pakistan Cricket Board account.", flags: ["Official source", "Verified account"] },
-  { id: 4, headline: "Eating chocolate daily increases IQ by 20 points", source: "FoodFacts.net", isReal: false, explanation: "No scientific evidence supports this. Extraordinary claims need extraordinary evidence.", flags: ["Sensationalist claim", "No citations"] },
-];
-
-const DEBATES = [
-  {
-    id: 1, question: "Should social media platforms be held responsible for misinformation?", category: "Tech & Society",
-    forPoints: ["Platforms profit from engagement", "They have technology to detect false info", "Public health impact"],
-    againstPoints: ["Impossible to fact-check everything", "Risk of censorship", "Users should be responsible"]
-  },
-  {
-    id: 2, question: "Is it ethical to use AI to write news articles?", category: "AI & Ethics",
-    forPoints: ["Faster news delivery", "Reduces costs", "No political bias"],
-    againstPoints: ["AI can hallucinate", "Removes human judgment", "Job losses"]
-  },
-  {
-    id: 3, question: "Should voting be mandatory?", category: "Politics",
-    forPoints: ["Higher participation", "More representative democracy", "Civic duty"],
-    againstPoints: ["Freedom includes not voting", "Uninformed votes", "Enforcement issues"]
-  },
-];
-
-const DISCUSSIONS = [
-  { id: 1, title: "Should schools teach financial literacy?", participants: 312, comments: 124, category: "Education", trending: true },
-  { id: 2, title: "Are sports stars paid too much?", participants: 456, comments: 178, category: "Sports", trending: true },
-  { id: 3, title: "Is remote work the future?", participants: 289, comments: 98, category: "Work", trending: false },
-];
 
 // ==================== COMPONENTS ====================
 
@@ -1740,7 +1146,164 @@ const DiscussionView = ({ topic, onBack, showToast }: { topic: any; onBack: () =
   );
 };
 
+// Crypto Lesson View
+const CryptoLessonView = ({ module, lesson, onBack, onComplete }: { module: CryptoModule; lesson: any; onBack: () => void; onComplete: () => void }) => {
+  const [showQuiz, setShowQuiz] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState<number[]>([]);
+  const [quizSubmitted, setQuizSubmitted] = useState(false);
+
+  const handleQuizAnswer = (questionIndex: number, answerIndex: number) => {
+    const newAnswers = [...quizAnswers];
+    newAnswers[questionIndex] = answerIndex;
+    setQuizAnswers(newAnswers);
+  };
+
+  const correctCount = quizSubmitted ? lesson.quiz.reduce((count: number, q: any, i: number) =>
+    count + (quizAnswers[i] === q.correctAnswer ? 1 : 0), 0) : 0;
+
+  return (
+    <div className="flex flex-col h-full bg-white">
+      <div className="flex items-center justify-between p-4 border-b border-gray-100">
+        <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-lg transition-colors"><ChevronLeft size={24} /></button>
+        <h2 className="font-bold text-lg">Crypto Learning</h2>
+        <div className="w-10" />
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        {!showQuiz ? (
+          <div className="space-y-6">
+            <div className="text-center py-4">
+              <div className="text-6xl mb-4">{module.emoji}</div>
+              <h2 className="text-2xl font-bold mb-2">{lesson.title}</h2>
+              <p className="text-sm text-gray-500">{module.title} • {lesson.duration}</p>
+            </div>
+
+            {/* Content Sections */}
+            <div className="space-y-4">
+              {lesson.content.map((paragraph: string, index: number) => (
+                <div key={index} className={`p-4 rounded-xl ${index === 0 ? 'bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200' : 'bg-gray-50'}`}>
+                  <p className={`leading-relaxed ${index === 0 ? 'text-purple-800 font-medium' : 'text-gray-700'}`}>
+                    {paragraph}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Key Points */}
+            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 border-2 border-amber-200">
+              <h3 className="font-bold text-amber-900 mb-3 flex items-center gap-2">
+                <Lightbulb size={20} className="text-amber-600" />
+                Key Takeaways
+              </h3>
+              <ul className="space-y-2">
+                {lesson.keyPoints.map((point: string, i: number) => (
+                  <li key={i} className="text-amber-800 flex items-start gap-2">
+                    <CheckCircle2 size={16} className="text-amber-600 mt-1 shrink-0" />
+                    <span className="text-sm">{point}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Continue to Quiz Button */}
+            <button
+              onClick={() => setShowQuiz(true)}
+              className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold hover:from-purple-700 hover:to-blue-700 transition-colors flex items-center justify-center gap-2"
+            >
+              <Brain size={20} />
+              Test Your Knowledge
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Brain size={24} className="text-purple-600" />
+              Knowledge Check
+            </h2>
+
+            {/* Quiz Questions */}
+            {lesson.quiz.map((q: any, qIndex: number) => (
+              <div key={qIndex} className="space-y-3 p-4 bg-gray-50 rounded-xl">
+                <p className="font-semibold text-gray-800">
+                  {qIndex + 1}. {q.question}
+                </p>
+                <div className="space-y-2">
+                  {q.options.map((opt: string, oIndex: number) => {
+                    const isSelected = quizAnswers[qIndex] === oIndex;
+                    const isCorrect = oIndex === q.correctAnswer;
+                    const showResult = quizSubmitted;
+
+                    return (
+                      <button
+                        key={oIndex}
+                        onClick={() => handleQuizAnswer(qIndex, oIndex)}
+                        disabled={quizSubmitted}
+                        className={`w-full p-3 rounded-lg border-2 text-left transition-all ${showResult && isCorrect ? 'border-green-500 bg-green-50' :
+                          showResult && isSelected && !isCorrect ? 'border-red-500 bg-red-50' :
+                            isSelected ? 'border-purple-500 bg-purple-50' :
+                              'border-gray-200 hover:border-gray-300'
+                          }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center text-xs ${showResult && isCorrect ? 'border-green-500 bg-green-500 text-white' :
+                            showResult && isSelected && !isCorrect ? 'border-red-500 bg-red-500 text-white' :
+                              isSelected ? 'border-purple-500 bg-purple-500 text-white' :
+                                'border-gray-300'
+                            }`}>
+                            {showResult && isCorrect ? '✓' : showResult && isSelected && !isCorrect ? '✗' : String.fromCharCode(65 + oIndex)}
+                          </div>
+                          <span className="text-sm">{opt}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {quizSubmitted && (
+                  <div className="mt-2 p-3 bg-blue-50 border-l-4 border-blue-500 rounded">
+                    <p className="text-sm text-blue-900">
+                      <strong>Explanation:</strong> {q.explanation}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ))}
+
+            {/* Submit/Complete Buttons */}
+            {!quizSubmitted ? (
+              <button
+                onClick={() => setQuizSubmitted(true)}
+                disabled={quizAnswers.length !== lesson.quiz.length}
+                className="w-full py-4 bg-purple-600 text-white rounded-xl font-bold disabled:opacity-50 hover:bg-purple-700 transition-colors"
+              >
+                Submit Answers
+              </button>
+            ) : (
+              <div className="space-y-3">
+                <div className="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl border-2 border-green-200">
+                  <div className="text-3xl mb-2">{correctCount === lesson.quiz.length ? '🎉' : '💪'}</div>
+                  <p className="font-bold text-lg">{correctCount}/{lesson.quiz.length} Correct</p>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {correctCount === lesson.quiz.length ? 'Perfect! You\'ve mastered this lesson!' : 'Review the explanations above.'}
+                  </p>
+                </div>
+                <button
+                  onClick={onComplete}
+                  className="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-bold hover:from-green-700 hover:to-emerald-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 size={20} />
+                  Complete Lesson (+{lesson.xp} XP)
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Learn Hub
+
 const LearnHub = ({ onSelectLesson, onSelectChallenge, onSelectDebate, onSelectDiscussion }: { onSelectLesson: (lesson: any) => void; onSelectChallenge: (challenge: any) => void; onSelectDebate: (debate: any) => void; onSelectDiscussion: (discussion: any) => void }) => {
   const [tab, setTab] = useState('lessons');
 
@@ -1770,8 +1333,9 @@ const LearnHub = ({ onSelectLesson, onSelectChallenge, onSelectDebate, onSelectD
         </div>
       </div>
 
+
       <div className="flex gap-2 p-4 overflow-x-auto bg-white border-b border-gray-100">
-        {[{ id: 'lessons', label: 'Lessons', icon: BookOpen }, { id: 'factcheck', label: 'Fact Check', icon: Shield }, { id: 'debate', label: 'Debate', icon: Scale }, { id: 'discuss', label: 'Discuss', icon: MessageCircle }].map(t => (
+        {[{ id: 'lessons', label: 'Lessons', icon: BookOpen }, { id: 'factcheck', label: 'Fact Check', icon: Shield }, { id: 'debate', label: 'Debate', icon: Scale }, { id: 'discuss', label: 'Discuss', icon: MessageCircle }, { id: 'crypto', label: 'Crypto', icon: Coins }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t.id ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
             <t.icon size={16} />{t.label}
           </button>
@@ -1883,6 +1447,246 @@ const LearnHub = ({ onSelectLesson, onSelectChallenge, onSelectDebate, onSelectD
             ))}
           </>
         )}
+
+        {tab === 'crypto' && (
+          <>
+            <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 rounded-2xl p-4 text-white">
+              <div className="flex items-center gap-2 mb-2"><Coins size={20} /><span className="font-bold">Crypto Academy</span></div>
+              <p className="text-sm opacity-90">Master cryptocurrency from basics to security</p>
+            </div>
+
+            {CRYPTO_MODULES.map(module => (
+              <div key={module.id} className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="text-3xl">{module.emoji}</div>
+                  <div>
+                    <h3 className="font-bold text-lg">{module.title}</h3>
+                    <p className="text-xs text-gray-500">{module.description}</p>
+                  </div>
+                  <span className={`ml-auto px-3 py-1 rounded-full text-xs font-bold ${module.level === 'beginner' ? 'bg-green-100 text-green-700' :
+                    module.level === 'intermediate' ? 'bg-yellow-100 text-yellow-700' :
+                      module.level === 'advanced' ? 'bg-red-100 text-red-700' :
+                        'bg-purple-100 text-purple-700'
+                    }`}>
+                    {module.level.charAt(0).toUpperCase() + module.level.slice(1)}
+                  </span>
+                </div>
+
+                {module.lessons.map(lesson => (
+                  <button
+                    key={lesson.id}
+                    onClick={() => (window as any).selectCryptoLesson?.(module, lesson)}
+                    className="w-full bg-white rounded-xl p-4 border border-gray-100 shadow-sm text-left hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-100 to-blue-100 rounded-lg flex items-center justify-center text-sm font-bold text-purple-700">
+                        {lesson.id}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-black">{lesson.title}</h4>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                          <span><Clock size={12} className="inline mr-1" />{lesson.duration}</span>
+                          <span><Star size={12} className="inline mr-1" />{lesson.xp} XP</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="text-gray-300 shrink-0" />
+                    </div>
+                  </button>
+                ))}
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ==================== AI CHAT COMPANION ====================
+const ChatCompanion = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
+  const [messages, setMessages] = useState<{ role: 'user' | 'assistant'; content: string; timestamp: Date }[]>([
+    {
+      role: 'assistant',
+      content: 'Hi! I\'m Sach AI, your guide to this app! 👋 Ask me anything about features, learning modules, or crypto concepts!',
+      timestamp: new Date()
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
+
+  const SUGGESTED_QUESTIONS = [
+    "What features does this app have?",
+    "How do I earn XP and level up?",
+    "Tell me about the crypto learning modules",
+    "How can I protect myself from crypto scams?",
+    "What's the difference between hot and cold wallets?",
+    "Explain blockchain technology simply",
+    "What are the best practices for wallet security?",
+    "How does the prediction market work?",
+    "What are fact-check challenges?",
+    "How do I play the games?"
+  ];
+
+  const messagesEndRef = useCallback((node: HTMLDivElement | null) => {
+    if (node) {
+      node.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, []);
+
+  const sendMessage = async (messageText?: string) => {
+    const textToSend = messageText || input.trim();
+    if (!textToSend || isLoading) return;
+
+    const userMessage = { role: 'user' as const, content: textToSend, timestamp: new Date() };
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+    setShowSuggestions(false);
+
+    try {
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [...messages, userMessage].map(m => ({ role: m.role, content: m.content }))
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.message,
+          timestamp: new Date()
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: data.message || 'Sorry, I encountered an error. Please try again! 😊',
+          timestamp: new Date()
+        }]);
+      }
+    } catch (error) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: 'Sorry, I\'m having trouble connecting right now. Please try again! 😊',
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSuggestedQuestion = (question: string) => {
+    sendMessage(question);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+
+      <div className="relative w-full sm:w-[440px] h-full sm:h-[680px] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:slide-in-from-bottom-4 duration-300">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 p-4 text-white flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+              <Sparkles size={20} />
+            </div>
+            <div>
+              <h3 className="font-bold text-lg">Sach AI</h3>
+              <p className="text-xs text-white/80">Your Learning Companion</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-white/20 rounded-lg transition-colors">
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+          {messages.map((msg, idx) => (
+            <div key={idx} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${msg.role === 'user'
+                ? 'bg-gradient-to-br from-purple-500 to-indigo-600 text-white'
+                : 'bg-gradient-to-br from-violet-100 to-purple-100 text-purple-600'
+                }`}>
+                {msg.role === 'user' ? MOCK_USER.avatar : <Sparkles size={16} />}
+              </div>
+              <div className={`flex-1 ${msg.role === 'user' ? 'flex justify-end' : ''}`}>
+                <div className={`inline-block max-w-[85%] p-3 rounded-2xl ${msg.role === 'user'
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-tr-sm'
+                  : 'bg-white border border-gray-200 text-gray-800 rounded-tl-sm'
+                  }`}>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                  <p className={`text-[10px] mt-1 ${msg.role === 'user' ? 'text-white/70' : 'text-gray-400'}`}>
+                    {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {isLoading && (
+            <div className="flex gap-3">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
+                <Sparkles size={16} className="text-purple-600" />
+              </div>
+              <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-tl-sm">
+                <div className="flex gap-1">
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Suggested Questions */}
+        {showSuggestions && messages.length <= 1 && (
+          <div className="p-4 bg-white border-t border-gray-100">
+            <p className="text-xs font-semibold text-gray-500 mb-2">Suggested questions:</p>
+            <div className="flex flex-wrap gap-2">
+              {SUGGESTED_QUESTIONS.slice(0, 6).map((q, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleSuggestedQuestion(q)}
+                  className="text-xs px-3 py-1.5 bg-purple-50 text-purple-700 rounded-full hover:bg-purple-100 transition-colors border border-purple-200"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Input */}
+        <div className="p-4 bg-white border-t border-gray-200">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+              placeholder="Ask me anything..."
+              disabled={isLoading}
+              className="flex-1 bg-gray-100 border-0 rounded-full px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50"
+            />
+            <button
+              onClick={() => sendMessage()}
+              disabled={!input.trim() || isLoading}
+              className="p-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full disabled:opacity-50 hover:from-purple-700 hover:to-indigo-700 transition-all disabled:hover:from-purple-600 disabled:hover:to-indigo-600 active:scale-95"
+            >
+              <Send size={18} />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1913,6 +1717,10 @@ export default function App() {
   const [activeChallenge, setActiveChallenge] = useState<any>(null);
   const [activeDebate, setActiveDebate] = useState<any>(null);
   const [activeDiscussion, setActiveDiscussion] = useState<any>(null);
+  const [activeCryptoLesson, setActiveCryptoLesson] = useState<{ module: CryptoModule; lesson: any } | null>(null);
+
+  // Chat companion state
+  const [chatOpen, setChatOpen] = useState(false);
 
   // Learn section state
   const [completedLessons, setCompletedLessons] = useState<number[]>(() => {
@@ -2145,6 +1953,16 @@ export default function App() {
     showToast(`🎯 Bet placed: ${side.toUpperCase()} Rs.${amount.toLocaleString()} → Rs.${potential.toLocaleString()}`);
   };
 
+  // Expose selectCryptoLesson function to window for crypto lesson selection
+  useEffect(() => {
+    (window as any).selectCryptoLesson = (module: CryptoModule, lesson: any) => {
+      setActiveCryptoLesson({ module, lesson });
+    };
+    return () => {
+      delete (window as any).selectCryptoLesson;
+    };
+  }, []);
+
   // Render sub-views
   if (activeGame === 'wordle') return <WordleGame onBack={() => setActiveGame(null)} onWin={() => showToast('🎉 You won! +25 XP')} showToast={showToast} />;
   if (activeGame === 'connections') return <ConnectionsGame onBack={() => setActiveGame(null)} onWin={() => showToast('🎉 Perfect! +50 XP')} showToast={showToast} />;
@@ -2153,6 +1971,7 @@ export default function App() {
   if (activeChallenge) return <FactCheckView challenge={activeChallenge} onBack={() => setActiveChallenge(null)} onComplete={() => setActiveChallenge(null)} />;
   if (activeDebate) return <DebateView topic={activeDebate} onBack={() => setActiveDebate(null)} />;
   if (activeDiscussion) return <DiscussionView topic={activeDiscussion} onBack={() => setActiveDiscussion(null)} showToast={showToast} />;
+  if (activeCryptoLesson) return <CryptoLessonView module={activeCryptoLesson.module} lesson={activeCryptoLesson.lesson} onBack={() => setActiveCryptoLesson(null)} onComplete={() => { setActiveCryptoLesson(null); showToast(`🎓 Crypto lesson completed! +${activeCryptoLesson.lesson.xp} XP`); }} />;
 
   return (
     <div className="h-screen w-full flex justify-center bg-gray-900 font-sans">
@@ -2688,6 +2507,19 @@ export default function App() {
           ))}
         </nav>
       </div>
+
+      {/* AI Chat Companion */}
+      <ChatCompanion isOpen={chatOpen} onClose={() => setChatOpen(false)} />
+
+      {/* Floating Chat Button */}
+      {!chatOpen && (
+        <button
+          onClick={() => setChatOpen(true)}
+          className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 w-14 h-14 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full shadow-2xl hover:shadow-purple-500/50 hover:scale-110 transition-all duration-300 flex items-center justify-center z-50 animate-pulse"
+        >
+          <Sparkles size={24} />
+        </button>
+      )}
 
       <style>{`
         .scrollbar-hide::-webkit-scrollbar { display: none; }
