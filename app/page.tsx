@@ -281,20 +281,30 @@ const FactCheckModal = ({ isOpen, onClose, article, result, loading }: { isOpen:
                 </h4>
                 <div className="space-y-2">
                   {result.credibleSources.map((source: any, idx: number) => (
-                    <div key={idx} className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100 rounded-lg p-3">
+                    <a
+                      key={idx}
+                      href={source.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100 rounded-lg p-3 hover:border-purple-300 hover:shadow-md transition-all group"
+                    >
                       <div className="flex items-start gap-2">
                         <CheckCircle className="text-purple-600 shrink-0 mt-0.5" size={16} />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="font-semibold text-sm">{source.name}</p>
+                            <p className="font-semibold text-sm group-hover:text-purple-700 transition-colors">{source.name}</p>
                             <span className="text-[10px] px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-bold">
                               {source.type}
                             </span>
+                            <ArrowUpRight size={12} className="text-purple-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                           </div>
                           <p className="text-xs text-gray-600 mt-1">{source.relevance}</p>
+                          {source.url && (
+                            <p className="text-[10px] text-purple-600 mt-1 truncate font-mono">{source.url}</p>
+                          )}
                         </div>
                       </div>
-                    </div>
+                    </a>
                   ))}
                 </div>
               </div>
