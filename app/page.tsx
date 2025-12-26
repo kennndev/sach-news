@@ -1335,7 +1335,7 @@ const LearnHub = ({ onSelectLesson, onSelectChallenge, onSelectDebate, onSelectD
 
 
       <div className="flex gap-2 p-4 overflow-x-auto bg-white border-b border-gray-100">
-        {[{ id: 'lessons', label: 'Lessons', icon: BookOpen }, { id: 'factcheck', label: 'Fact Check', icon: Shield }, { id: 'debate', label: 'Debate', icon: Scale }, { id: 'discuss', label: 'Discuss', icon: MessageCircle }, { id: 'crypto', label: 'Crypto', icon: Coins }].map(t => (
+        {[{ id: 'lessons', label: 'Lessons', icon: BookOpen }, { id: 'crypto', label: 'Crypto', icon: Coins }, { id: 'factcheck', label: 'Fact Check', icon: Shield }, { id: 'debate', label: 'Debate', icon: Scale }, { id: 'discuss', label: 'Discuss', icon: MessageCircle }].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${tab === t.id ? 'bg-emerald-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
             <t.icon size={16} />{t.label}
           </button>
@@ -1356,6 +1356,7 @@ const LearnHub = ({ onSelectLesson, onSelectChallenge, onSelectDebate, onSelectD
               </div>
             </div>
             <h3 className="font-bold text-lg text-black">All Lessons</h3>
+            {/* Media Literacy Lessons */}
             {LESSONS.map(lesson => (
               <button key={lesson.id} onClick={() => !lesson.locked && onSelectLesson(lesson)} disabled={lesson.locked}
                 className={`w-full bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center gap-4 text-left ${lesson.locked ? 'opacity-50' : 'hover:shadow-md'} transition-all`}>
@@ -1369,11 +1370,60 @@ const LearnHub = ({ onSelectLesson, onSelectChallenge, onSelectDebate, onSelectD
                   <p className="text-xs text-gray-500 truncate">{lesson.topic}</p>
                   <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
                     <span><Clock size={12} className="inline mr-1" />{lesson.duration}</span>
-                    <span className={`px-2 py-0.5 rounded-full font-semibold ${lesson.difficulty === 'Beginner' ? 'bg-green-100 text-green-700' : lesson.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{lesson.difficulty}</span>
+                    <span className={`px-2 py-0.5 rounded-full font-semibold ${lesson.stage === 'beginner' ? 'bg-green-100 text-green-700' : lesson.stage === 'intermediate' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{lesson.stage}</span>
                   </div>
                 </div>
                 <ChevronRight className="text-gray-300 shrink-0" />
               </button>
+            ))}
+
+            {/* Crypto Lessons */}
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <h3 className="font-bold text-lg text-black mb-4 flex items-center gap-2">
+                <Coins size={20} className="text-purple-600" />
+                Crypto Academy
+              </h3>
+            </div>
+            {CRYPTO_MODULES.map(module => (
+              <div key={module.id} className="mb-4">
+                <div className="flex items-center gap-2 mb-2 px-2">
+                  <span className="text-2xl">{module.emoji}</span>
+                  <div>
+                    <h4 className="font-bold text-sm text-black">{module.title}</h4>
+                    <p className="text-xs text-gray-500">{module.description}</p>
+                  </div>
+                </div>
+                {module.lessons.map(lesson => (
+                  <button
+                    key={`crypto-${module.id}-${lesson.id}`}
+                    onClick={() => {
+                      (window as any).selectCryptoLesson?.(module, lesson);
+                    }}
+                    className="w-full bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex items-center gap-4 text-left hover:shadow-md transition-all mb-2"
+                  >
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg flex items-center justify-center text-white font-bold shrink-0">
+                      {lesson.id}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-black truncate">{lesson.title}</h4>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
+                        <span><Clock size={12} className="inline mr-1" />{lesson.duration}</span>
+                        <span className="flex items-center gap-1">
+                          <Coins size={12} />+{lesson.xp} XP
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full font-semibold ${module.level === 'beginner' ? 'bg-green-100 text-green-700' :
+                            module.level === 'intermediate' ? 'bg-yellow-100 text-yellow-700' :
+                              module.level === 'advanced' ? 'bg-red-100 text-red-700' :
+                                'bg-purple-100 text-purple-700'
+                          }`}>
+                          {module.level}
+                        </span>
+                      </div>
+                    </div>
+                    <ChevronRight className="text-gray-300 shrink-0" />
+                  </button>
+                ))}
+              </div>
             ))}
           </>
         )}
