@@ -46,6 +46,11 @@ function categorizeArticle(article: any): string {
     if (text.includes('weather') || text.includes('rain') || text.includes('snow') || text.includes('temperature')) {
         return 'weather';
     }
+    if (text.includes('entertainment') || text.includes('movie') || text.includes('film') || text.includes('drama') ||
+        text.includes('celebrity') || text.includes('bollywood') || text.includes('lollywood') || text.includes('music') ||
+        text.includes('showbiz') || text.includes('actor') || text.includes('actress')) {
+        return 'entertainment';
+    }
     return 'politics'; // Default to politics
 }
 
@@ -221,9 +226,9 @@ export function getNewsCategoryQuery(category: string): string {
         cricket: 'Pakistan cricket PSL',
         economy: 'Pakistan economy business IMF',
         tech: 'Pakistan technology startup',
-        weather: 'Pakistan weather forecast'
+        weather: 'Pakistan weather forecast',
+        entertainment: 'Pakistan entertainment showbiz drama film'
     };
 
     return categoryMap[category] || 'Pakistan news';
 }
-
