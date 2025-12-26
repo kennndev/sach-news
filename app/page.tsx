@@ -11,7 +11,7 @@ import {
   RotateCcw, Delete, ChevronLeft, HelpCircle, Shuffle,
   GraduationCap, BookOpen, Users, MessageCircle, Shield, Eye,
   ThumbsDown, Scale, Lightbulb, Star, Lock, Volume2, VolumeX,
-  PlayCircle, CheckCircle, XCircle, ChevronDown, Mic, Plus, Minus, Copy, Loader2, ArrowLeft, Check
+  PlayCircle, CheckCircle, XCircle, ChevronDown, Mic, Plus, Minus, Copy, Loader2, ArrowLeft, Check, AlertTriangle
 } from 'lucide-react';
 import { fetchYouTubeVideos, getCategoryQuery, type YouTubeVideo } from '@/lib/youtube';
 import { fetchNewsArticles, getNewsCategoryQuery, type NewsArticle } from '@/lib/newsapi';
@@ -41,11 +41,16 @@ const CATEGORIES = [
 // ==================== COMPONENTS ====================
 
 // Trust Badge
-const TrustBadge = ({ score }: { score: number }) => (
-  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-0.5 ${score >= 90 ? 'bg-emerald-500' : score >= 70 ? 'bg-amber-500' : 'bg-red-500'
-    } text-white`}>
+const TrustBadge = ({ score, onClick }: { score: number; onClick?: () => void }) => (
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      onClick?.();
+    }}
+    className={`px-1.5 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-0.5 ${score >= 90 ? 'bg-emerald-500' : score >= 70 ? 'bg-amber-500' : 'bg-red-500'
+      } text-white hover:opacity-80 transition-opacity cursor-pointer`}>
     <Sparkles size={8} />{score}%
-  </span>
+  </button>
 );
 
 // Modal Wrapper
@@ -190,6 +195,151 @@ const CommentsSheet = ({ isOpen, onClose, comments: initialComments, onAddCommen
   );
 };
 
+// Fact Check Modal
+const FactCheckModal = ({ isOpen, onClose, article, result, loading }: { isOpen: boolean; onClose: () => void; article: any; result: any; loading: boolean }) => {
+  if (!isOpen) return null;
+
+  const getVerdictColor = (verdict: string) => {
+    switch (verdict) {
+      case 'verified': return 'text-emerald-600 bg-emerald-50';
+      case 'partially-verified': return 'text-yellow-600 bg-yellow-50';
+      case 'questionable': return 'text-orange-600 bg-orange-50';
+      default: return 'text-gray-600 bg-gray-50';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'verified': return <CheckCircle className="text-emerald-500" size={16} />;
+      case 'questionable': return <XCircle className="text-orange-500" size={16} />;
+      default: return <HelpCircle className="text-gray-400" size={16} />;
+    }
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="AI Fact-Check">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[70vh]">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="animate-spin text-purple-600 mb-4" size={48} />
+            <p className="text-gray-600 font-medium">Analyzing article...</p>
+            <p className="text-sm text-gray-400 mt-1">Checking facts and sources</p>
+          </div>
+        ) : result ? (
+          <>
+            {/* Overall Verdict */}
+            <div className={`p-4 rounded-xl ${getVerdictColor(result.overallVerdict)}`}>
+              <div className="flex items-center gap-2 mb-2">
+                <Shield size={20} />
+                <span className="font-bold text-sm uppercase">Overall Verdict</span>
+              </div>
+              <p className="font-bold text-lg capitalize">{result.overallVerdict.replace('-', ' ')}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-sm">Trust Score:</span>
+                <span className="font-bold">{result.trustScore}%</span>
+              </div>
+            </div>
+
+            {/* Analysis */}
+            <div className="bg-gray-50 p-4 rounded-xl">
+              <h4 className="font-bold text-sm mb-2 flex items-center gap-2">
+                <Brain size={16} />
+                AI Analysis
+              </h4>
+              <p className="text-sm text-gray-700">{result.analysis}</p>
+            </div>
+
+            {/* Key Claims */}
+            {result.keyClaims && result.keyClaims.length > 0 && (
+              <div>
+                <h4 className="font-bold text-sm mb-3 flex items-center gap-2">
+                  <Target size={16} />
+                  Key Claims Verified
+                </h4>
+                <div className="space-y-2">
+                  {result.keyClaims.map((claim: any, idx: number) => (
+                    <div key={idx} className="bg-white border border-gray-200 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        {getStatusIcon(claim.status)}
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{claim.claim}</p>
+                          <p className="text-xs text-gray-500 mt-1">{claim.explanation}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Credible Sources */}
+            {result.credibleSources && result.credibleSources.length > 0 && (
+              <div>
+                <h4 className="font-bold text-sm mb-3 flex items-center gap-2">
+                  <Globe size={16} />
+                  Credible Sources to Verify
+                </h4>
+                <div className="space-y-2">
+                  {result.credibleSources.map((source: any, idx: number) => (
+                    <div key={idx} className="bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-100 rounded-lg p-3">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle className="text-purple-600 shrink-0 mt-0.5" size={16} />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-semibold text-sm">{source.name}</p>
+                            <span className="text-[10px] px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full font-bold">
+                              {source.type}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-1">{source.relevance}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Red Flags */}
+            {result.redFlags && result.redFlags.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                <h4 className="font-bold text-sm mb-2 flex items-center gap-2 text-red-700">
+                  <AlertTriangle size={16} />
+                  Red Flags
+                </h4>
+                <ul className="space-y-1">
+                  {result.redFlags.map((flag: string, idx: number) => (
+                    <li key={idx} className="text-sm text-red-700 flex items-start gap-2">
+                      <span className="shrink-0">•</span>
+                      <span>{flag}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Recommendations */}
+            {result.recommendations && (
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <h4 className="font-bold text-sm mb-2 flex items-center gap-2 text-blue-700">
+                  <Lightbulb size={16} />
+                  Recommendations
+                </h4>
+                <p className="text-sm text-blue-700">{result.recommendations}</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-8 text-gray-400">
+            <Shield size={32} className="mx-auto mb-2 opacity-50" />
+            <p>No fact-check results available</p>
+          </div>
+        )}
+      </div>
+    </Modal>
+  );
+};
+
 // Bet Modal
 const BetModal = ({ isOpen, onClose, market, onPlaceBet }: { isOpen: boolean; onClose: () => void; market: any; onPlaceBet?: (side: string, amount: number, potentialWin: number) => void }) => {
   const [side, setSide] = useState('yes');
@@ -296,7 +446,7 @@ const MarketTicker = ({ market, onBet }: { market: any; onBet: (side: string) =>
 );
 
 // Feed Card
-const FeedCard = ({ data, onComment, onBet, onBookmark }: { data: any; onComment: () => void; onBet: (side: string) => void; onBookmark: () => void }) => {
+const FeedCard = ({ data, onComment, onBet, onBookmark, onFactCheck }: { data: any; onComment: () => void; onBet: (side: string) => void; onBookmark: () => void; onFactCheck?: () => void }) => {
   const cat = CATEGORIES.find(c => c.id === data.category);
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(data.engagement.likes);
@@ -319,7 +469,7 @@ const FeedCard = ({ data, onComment, onBet, onBookmark }: { data: any; onComment
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="font-bold text-sm truncate">{data.author.name}</span>
                 {data.author.verified && <CheckCircle2 size={14} className="text-blue-500 fill-blue-500 shrink-0" />}
-                <TrustBadge score={data.ai_score} />
+                <TrustBadge score={data.ai_score} onClick={onFactCheck} />
               </div>
               <div className="text-xs text-gray-400 flex items-center gap-1.5">
                 <span>{data.timestamp}</span>
@@ -1412,9 +1562,9 @@ const LearnHub = ({ onSelectLesson, onSelectChallenge, onSelectDebate, onSelectD
                           <Coins size={12} />+{lesson.xp} XP
                         </span>
                         <span className={`px-2 py-0.5 rounded-full font-semibold ${module.level === 'beginner' ? 'bg-green-100 text-green-700' :
-                            module.level === 'intermediate' ? 'bg-yellow-100 text-yellow-700' :
-                              module.level === 'advanced' ? 'bg-red-100 text-red-700' :
-                                'bg-purple-100 text-purple-700'
+                          module.level === 'intermediate' ? 'bg-yellow-100 text-yellow-700' :
+                            module.level === 'advanced' ? 'bg-red-100 text-red-700' :
+                              'bg-purple-100 text-purple-700'
                           }`}>
                           {module.level}
                         </span>
@@ -1772,6 +1922,12 @@ export default function App() {
   // Chat companion state
   const [chatOpen, setChatOpen] = useState(false);
 
+  // Fact-check states
+  const [factCheckOpen, setFactCheckOpen] = useState(false);
+  const [factCheckLoading, setFactCheckLoading] = useState(false);
+  const [factCheckResult, setFactCheckResult] = useState<any>(null);
+  const [factCheckArticle, setFactCheckArticle] = useState<any>(null);
+
   // Learn section state
   const [completedLessons, setCompletedLessons] = useState<number[]>(() => {
     if (typeof window !== 'undefined') {
@@ -1969,6 +2125,40 @@ export default function App() {
     setTimeout(() => setToast(null), 3000);
   }, []);
 
+  const handleFactCheck = useCallback(async (article: any) => {
+    setFactCheckArticle(article);
+    setFactCheckOpen(true);
+    setFactCheckLoading(true);
+    setFactCheckResult(null);
+
+    try {
+      const response = await fetch('/api/fact-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          headline: article.headline,
+          summary: article.summary,
+          category: article.category
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.result) {
+        setFactCheckResult(data.result);
+      } else {
+        showToast('❌ Failed to perform fact-check');
+        setFactCheckOpen(false);
+      }
+    } catch (error) {
+      console.error('Fact-check error:', error);
+      showToast('❌ Error performing fact-check');
+      setFactCheckOpen(false);
+    } finally {
+      setFactCheckLoading(false);
+    }
+  }, [showToast]);
+
   const filteredFeed = useMemo(() => {
     let filtered = feedData;
 
@@ -2041,6 +2231,15 @@ export default function App() {
           <BetModal isOpen={betOpen} onClose={() => setBetOpen(false)} market={selectedItem.market} onPlaceBet={handlePlaceBet} />
         </>
       )}
+
+      {/* Fact Check Modal */}
+      <FactCheckModal
+        isOpen={factCheckOpen}
+        onClose={() => setFactCheckOpen(false)}
+        article={factCheckArticle}
+        result={factCheckResult}
+        loading={factCheckLoading}
+      />
 
       {/* App Container */}
       <div className="w-full max-w-md h-full bg-white shadow-2xl relative flex flex-col overflow-hidden">
@@ -2118,7 +2317,8 @@ export default function App() {
                       <FeedCard key={item.id} data={item}
                         onComment={() => { setSelectedItem(item); setCommentsOpen(true); }}
                         onBet={() => { setSelectedItem(item); setBetOpen(true); }}
-                        onBookmark={() => handleBookmark(item.id)} />
+                        onBookmark={() => handleBookmark(item.id)}
+                        onFactCheck={() => handleFactCheck(item)} />
                     ))}
                     <div className="p-8 text-center text-gray-400 text-sm">
                       <CheckCircle2 size={32} className="mx-auto mb-2 opacity-30" />
