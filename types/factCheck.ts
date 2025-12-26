@@ -10,6 +10,7 @@ export interface FactCheckResult {
     }[];
     credibleSources: {
         name: string;
+        url: string;
         type: 'Official' | 'News Agency' | 'Research' | 'Government';
         relevance: string;
     }[];
