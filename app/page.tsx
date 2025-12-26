@@ -34,6 +34,7 @@ const CATEGORIES = [
   { id: 'economy', label: 'Economy', icon: Coins, color: 'from-amber-500 to-orange-600' },
   { id: 'tech', label: 'Tech', icon: Smartphone, color: 'from-cyan-500 to-blue-600' },
   { id: 'weather', label: 'Weather', icon: CloudRain, color: 'from-slate-500 to-gray-600' },
+  { id: 'entertainment', label: 'Entertainment', icon: Video, color: 'from-pink-500 to-rose-600' },
 ];
 
 
@@ -479,7 +480,8 @@ const FeedCard = ({ data, onComment, onBet, onBookmark, onFactCheck }: { data: a
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="font-bold text-sm truncate">{data.author.name}</span>
                 {data.author.verified && <CheckCircle2 size={14} className="text-blue-500 fill-blue-500 shrink-0" />}
-                <TrustBadge score={data.ai_score} onClick={onFactCheck} />
+                {/* Only show fact-check for non-mainstream media (unverified sources) */}
+                {!data.author.verified && <TrustBadge score={data.ai_score} onClick={onFactCheck} />}
               </div>
               <div className="text-xs text-gray-400 flex items-center gap-1.5">
                 <span>{data.timestamp}</span>
@@ -2306,23 +2308,37 @@ export default function App() {
                   </div>
                 ) : (
                   <>
-                    <div className="m-4 p-4 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-2xl text-white shadow-xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
-                      <div className="relative z-10">
-                        <div className="flex items-center gap-2 mb-3"><Flame size={16} /><span className="text-xs font-bold uppercase opacity-80">Trending</span></div>
-                        <h2 className="text-lg sm:text-xl font-bold leading-tight mb-4">Will Pakistan secure IMF tranche by March?</h2>
-                        <div className="flex gap-3">
-                          <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
-                            <div className="text-2xl sm:text-3xl font-black">72%</div>
-                            <div className="text-[10px] uppercase font-bold opacity-70">Yes</div>
+                    {/* Trending/Latest News Card */}
+                    {filteredFeed.length > 0 && (
+                      <div className="m-4 p-4 bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-2xl text-white shadow-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+                        <div className="relative z-10">
+                          <div className="flex items-center gap-2 mb-3">
+                            <Flame size={16} />
+                            <span className="text-xs font-bold uppercase opacity-80">Latest News</span>
                           </div>
-                          <div className="flex-1 bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
-                            <div className="text-2xl sm:text-3xl font-black">28%</div>
-                            <div className="text-[10px] uppercase font-bold opacity-70">No</div>
+                          <h2 className="text-lg sm:text-xl font-bold leading-tight mb-2">{filteredFeed[0].headline}</h2>
+                          <p className="text-sm opacity-90 line-clamp-2 mb-3">{filteredFeed[0].summary}</p>
+                          <div className="flex items-center gap-2 text-xs opacity-80">
+                            <span className="flex items-center gap-1">
+                              <User size={12} />
+                              {filteredFeed[0].author.name}
+                            </span>
+                            <span>•</span>
+                            <span>{filteredFeed[0].timestamp}</span>
+                            {filteredFeed[0].type === 'video' && (
+                              <>
+                                <span>•</span>
+                                <span className="flex items-center gap-1">
+                                  <Video size={12} />
+                                  Video
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
                       </div>
-                    </div>
+                    )}
                     {filteredFeed.map((item: FeedItem) => (
                       <FeedCard key={item.id} data={item}
                         onComment={() => { setSelectedItem(item); setCommentsOpen(true); }}
