@@ -37,6 +37,7 @@ Provide your analysis in the following JSON format:
   "credibleSources": [
     {
       "name": "<source name>",
+      "url": "<actual URL to the source - must be real, working URL>",
       "type": "Official" | "News Agency" | "Research" | "Government",
       "relevance": "<why this source is relevant>"
     }
@@ -49,6 +50,9 @@ Guidelines:
 - Be objective and balanced
 - Identify specific claims that can be verified
 - Suggest credible sources (official websites, established news agencies, government sources)
+- **IMPORTANT: Provide real, working URLs for each source (e.g., https://www.dawn.com, https://www.bbc.com/news, https://www.pmd.gov.pk)**
+- For government sources, use official .gov.pk domains
+- For news agencies, use their official websites
 - Note any red flags (sensational language, lack of sources, etc.)
 - Provide actionable recommendations for readers
 - If you cannot verify, say so honestly
